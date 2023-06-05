@@ -1,0 +1,42 @@
+{
+  "name": "fr/fr-utility",
+  "type": "typo3-cms-extension",
+  "description": "Collection of utilities to use in TYPO3 Extensions.",
+  "homepage": "https://github.com/CPS-IT/cps-utility",
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "typo3/cms-core": "^10.4 || ^11.0"
+  },
+  "require-dev": {
+    "roave/security-advisories": "dev-master",
+    "nimut/testing-framework": "^5.2 || ^6.0"
+  },
+  "extra": {
+    "typo3/cms": {
+      "extension-key": "cps_utility"
+    }
+  },
+  "autoload": {
+    "psr-4": {
+      "Cpsit\\CpsUtility\\": "Classes"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Cpsit\\CpsUtility\\Tests\\": "Tests"
+    }
+  },
+  "scripts": {
+    "post-autoload-dump": [
+      "mkdir -p .Build/Web/typo3conf/ext/",
+      "[ -L .Build/Web/typo3conf/ext/cps_utility ] || ln -snvf ../../../../. .Build/Web/typo3conf/ext/cps_utility"
+    ],
+    "test": [
+      "@test:unit"
+    ],
+    "test:unit": [
+      "phpunit -c Tests/Build/UnitTests.xml"
+    ]
+  }
+
+}
