@@ -1,5 +1,5 @@
 {
-  "name": "fr/fr-utility",
+  "name": "cpsit/cps-utility",
   "type": "typo3-cms-extension",
   "description": "Collection of utilities to use in TYPO3 Extensions.",
   "homepage": "https://github.com/CPS-IT/cps-utility",
