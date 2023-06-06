@@ -12,7 +12,7 @@ namespace Cpsit\CpsUtility\Rendering;
 
 use org\bovigo\vfs\vfsStreamResolveIncludePathTestCase;
 use TYPO3\CMS\Core\Resource\FileInterface;
-use TYPO3\CMS\Core\Resource\Rendering\YouTubeRenderer;
+use TYPO3\CMS\Core\Resource\Rendering\YouTubeRenderer as CoreYouTubeRenderer;
 
 /**
  * YouTube renderer class
@@ -31,7 +31,7 @@ use TYPO3\CMS\Core\Resource\Rendering\YouTubeRenderer;
  *     }
  * }
  */
-class YouTubeRenderer extends YouTubeRenderer
+class YouTubeRenderer extends CoreYouTubeRenderer
 {
     /**
      * Returns the priority of the renderer

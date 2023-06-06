@@ -11,7 +11,7 @@
 namespace Cpsit\CpsUtility\Rendering;
 
 use TYPO3\CMS\Core\Resource\FileInterface;
-use TYPO3\CMS\Core\Resource\Rendering\VimeoRenderer;
+use TYPO3\CMS\Core\Resource\Rendering\VimeoRenderer as CoreVimeoRenderer;
 
 /**
  * Vimeo renderer class
@@ -30,7 +30,7 @@ use TYPO3\CMS\Core\Resource\Rendering\VimeoRenderer;
  *     }
  * }
  */
-class VimeoRenderer extends VimeoRenderer
+class VimeoRenderer extends CoreVimeoRenderer
 {
     /**
      * Returns the priority of the renderer
