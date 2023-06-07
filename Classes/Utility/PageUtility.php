@@ -12,6 +12,8 @@ declare(strict_types=1);
 namespace Cpsit\CpsUtility\Utility;
 
 use Cpsit\CpsUtility\Domain\Repository\PageRepository;
+use TYPO3\CMS\Core\Context\Context;
+use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 
@@ -40,9 +42,13 @@ class PageUtility
     {
         if (empty($storagePages)) {
             try {
+                if(!isset($GLOBALS['TSFE']))
+                {
+                    throw new \Exception('missing TSFE');
+                }
                 // make sure we are in frontend context
                 /** @var TypoScriptFrontendController $frontend */
-                $frontend = GeneralUtility::makeInstance(TypoScriptFrontendController::class);
+                $frontend = $GLOBALS['TSFE'];
                 $storagePages = [
                     (int)$frontend->id
                 ];
