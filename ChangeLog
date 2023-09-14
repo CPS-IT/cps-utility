@@ -1,3 +1,6 @@
+2023-09-14         [RELEASE] Release of cps_utility 1.1.0 (Dirk Wenzel)
+2023-09-07 de69bdc [TASK] RecordSlugDecorator ported (Dirk Wenzel)
+
 2023-06-12         [RELEASE] Release of cps_utility 1.0.0 (Vladimir Falcon)
 2023-06-07 988c703 [BUGFIX] fixed error caused by invalid instantiation of dependency in PageUtility (Dirk Wenzel)
 2023-06-06 e75155d invalid extension fixed (Dirk Wenzel)
