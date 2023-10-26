@@ -1,3 +1,8 @@
+2023-10-26         [RELEASE] Release of cps-utility 2.0.0 (Vladimir Falcon)
+2023-10-25 a6c0187 Drop compatibility with TYPO3 V-10 (Vladimir Falcon)
+2023-09-20 54a25f3 Fixed return type error in TYPO3 v12 (Vladimir Falcon)
+2023-09-20 e02cec4 Include TYPO3 v12 in composer requirements. Fixed doctrine deprecation message (Vladimir Falcon)
+
 2023-09-28         [RELEASE] Release of cps_utility 1.2.0 (Vladimir Falcon)
 2023-09-28 717a4f0 Feature implode view helper (Vladimir Falcon)
 
