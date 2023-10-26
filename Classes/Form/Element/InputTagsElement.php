@@ -118,15 +118,15 @@ class InputTagsElement extends AbstractFormElement
         $html = [];
         $html[] = '<div class="formengine-field-item t3js-formengine-field-item">';
         $html[] = $fieldInformationHtml;
-        $html[] =   '<div class="form-wizards-wrap">';
-        $html[] =      '<div class="form-wizards-element">';
-        $html[] =         '<div class="form-control-wrap">';
-        $html[] =            '<input type="text" value="' . htmlspecialchars($itemValue, ENT_QUOTES) . '" ';
-        $html[]=               GeneralUtility::implodeAttributes($attributes, true);
-        $html[]=            ' />';
-        $html[] =         '</div>';
-        $html[] =      '</div>';
-        $html[] =   '</div>';
+        $html[] = '<div class="form-wizards-wrap">';
+        $html[] = '<div class="form-wizards-element">';
+        $html[] = '<div class="form-control-wrap">';
+        $html[] = '<input type="text" value="' . htmlspecialchars($itemValue, ENT_QUOTES) . '" ';
+        $html[] = GeneralUtility::implodeAttributes($attributes, true);
+        $html[] = ' />';
+        $html[] = '</div>';
+        $html[] = '</div>';
+        $html[] = '</div>';
         $html[] = '</div>';
         $resultArray['html'] = implode(LF, $html);
 
@@ -186,7 +186,7 @@ class InputTagsElement extends AbstractFormElement
      * Code taken from  TYPO3\CMS\Backend\Form\Element\InputTextElement
      * Line: 121 - 140
      */
-    protected function evalHandling(array $evalList, array &$resultArray, string &$itemValue)
+    protected function evalHandling(array $evalList, array &$resultArray, string &$itemValue): void
     {
         // @todo: The whole eval handling is a mess and needs refactoring
         foreach ($evalList as $func) {
@@ -250,10 +250,7 @@ class InputTagsElement extends AbstractFormElement
         return $resultArray;
     }
 
-    /**
-     * @return LanguageService
-     */
-    protected function getLanguageService()
+    protected function getLanguageService(): LanguageService
     {
         return $GLOBALS['LANG'];
     }
