@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Cpsit\CpsUtility\Domain\Repository;
 
 /*
@@ -14,7 +17,6 @@ namespace Cpsit\CpsUtility\Domain\Repository;
  * The TYPO3 project - inspiring people to share!
  *
  */
-
 
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryHelper;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the cps_utility project.
  *
@@ -10,7 +12,6 @@
 
 namespace Cpsit\CpsUtility\Rendering;
 
-use org\bovigo\vfs\vfsStreamResolveIncludePathTestCase;
 use TYPO3\CMS\Core\Resource\FileInterface;
 use TYPO3\CMS\Core\Resource\Rendering\YouTubeRenderer as CoreYouTubeRenderer;
 

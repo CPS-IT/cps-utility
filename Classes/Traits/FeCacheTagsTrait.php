@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /*
  * This file is part of the gebaeudeforum-bundle project.
  *
@@ -9,7 +12,6 @@
 
 namespace Cpsit\CpsUtility\Traits;
 
-
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 
@@ -17,7 +19,6 @@ use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
  * Add fe cache tags trait
  *
  * Usage $this->>addCacheTags(['tag1',[tag2]])
- *
  */
 trait FeCacheTagsTrait
 {

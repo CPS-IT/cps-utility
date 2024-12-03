@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Cpsit\CpsUtility\ViewHelpers\Format;
@@ -26,15 +27,11 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\Traits\CompileWithContentArgumentAndRenderS
  *
  * Inline notation
  * {fr:format.trim(content:'trim the pipe |', characters:'| t')}
- *
  */
 class TrimViewHelper extends AbstractViewHelper
 {
     use CompileWithContentArgumentAndRenderStatic;
 
-    /**
-     * @return void
-     */
     public function initializeArguments()
     {
         $this->registerArgument('content', 'string', 'String to trim');
@@ -56,7 +53,7 @@ class TrimViewHelper extends AbstractViewHelper
     ) {
         $characters = $arguments['characters'];
         $content = $renderChildrenClosure();
-        if (false === empty($characters)) {
+        if (empty($characters) === false) {
             $content = trim($content, $characters);
         } else {
             $content = trim($content);

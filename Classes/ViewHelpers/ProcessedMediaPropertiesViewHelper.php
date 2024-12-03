@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Cpsit\CpsUtility\ViewHelpers;
@@ -11,17 +12,13 @@ namespace Cpsit\CpsUtility\ViewHelpers;
  * of the License, or any later version.
  */
 
-use phpDocumentor\Reflection\Types\Static_;
 use TYPO3\CMS\Core\Page\AssetCollector;
 use TYPO3\CMS\Core\Resource\File;
-use TYPO3\CMS\Core\Resource\ProcessedFile;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 use TYPO3Fluid\Fluid\Core\ViewHelper\Traits\CompileWithRenderStatic;
 use TYPO3Fluid\Fluid\Core\ViewHelper\ViewHelperInterface;
-
 
 /**
  * Get last processed image properties
@@ -30,7 +27,7 @@ class ProcessedMediaPropertiesViewHelper extends AbstractViewHelper implements V
 {
     use CompileWithRenderStatic;
 
-    const ALLOWED_PROPERTIES = ['width', 'height', 'extension', 'resource', 'origFile', 'modificationTime'];
+    public const ALLOWED_PROPERTIES = ['width', 'height', 'extension', 'resource', 'origFile', 'modificationTime'];
 
     /**
      * Initialize arguments
@@ -56,8 +53,10 @@ class ProcessedMediaPropertiesViewHelper extends AbstractViewHelper implements V
         $value = null;
 
         if (!in_array($arguments['property'], self::ALLOWED_PROPERTIES)) {
-            throw new \RuntimeException(sprintf('The value "%s" is not supported in LastProcessedImageSizeViewHelper',
-                $arguments['property']));
+            throw new \RuntimeException(sprintf(
+                'The value "%s" is not supported in LastProcessedImageSizeViewHelper',
+                $arguments['property']
+            ));
         }
 
         $mediaOnPage = GeneralUtility::makeInstance(AssetCollector::class)->getMedia();
@@ -66,10 +65,10 @@ class ProcessedMediaPropertiesViewHelper extends AbstractViewHelper implements V
         // method ist not consistent between different TYPO3 versions
         $media = $mediaOnPage[$arguments['resource']] ?? $mediaOnPage[ltrim($arguments['resource'], '/')] ?? null;
 
-        if(is_array($media) && !empty($media)) {
+        if (is_array($media) && !empty($media)) {
             $getter = 'get' . ucfirst($arguments['property']);
 
-            if(method_exists(__CLASS__, $getter)) {
+            if (method_exists(__CLASS__, $getter)) {
                 $value = self::$getter($media);
             }
         }

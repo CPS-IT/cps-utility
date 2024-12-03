@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /*
@@ -11,12 +12,12 @@ declare(strict_types=1);
 
 namespace Cpsit\CpsUtility\Form\Element;
 
+use Cpsit\CpsUtility\Configuration\SettingsInterface as SI;
 use TYPO3\CMS\Backend\Form\Element\AbstractFormElement;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
 use TYPO3\CMS\Core\Utility\StringUtility;
-use Cpsit\CpsUtility\Configuration\SettingsInterface as SI;
 
 /**
  * Custom form element to display comma-separated values as tags
@@ -31,7 +32,6 @@ use Cpsit\CpsUtility\Configuration\SettingsInterface as SI;
  *          'eval' => 'trim'
  *      ]
  *  ],
- *
  */
 class InputTagsElement extends AbstractFormElement
 {
@@ -58,7 +58,7 @@ class InputTagsElement extends AbstractFormElement
         'otherLanguageContent' => [
             'renderType' => 'otherLanguageContent',
             'after' => [
-                'localizationStateSelector'
+                'localizationStateSelector',
             ],
         ],
         'defaultLanguageDifferences' => [
@@ -87,8 +87,11 @@ class InputTagsElement extends AbstractFormElement
         $itemValue = $parameterArray['itemFormElValue'];
         $config = $parameterArray['fieldConf']['config'];
         $evalList = GeneralUtility::trimExplode(',', $config['eval'], true);
-        $size = MathUtility::forceIntegerInRange($config['size'] ?? $this->defaultInputWidth, $this->minimumInputWidth,
-            $this->maxInputWidth);
+        $size = MathUtility::forceIntegerInRange(
+            $config['size'] ?? $this->defaultInputWidth,
+            $this->minimumInputWidth,
+            $this->maxInputWidth
+        );
         $width = (int)$this->formMaxWidth($size);
 
         $fieldInformationResult = $this->renderFieldInformation();
@@ -133,7 +136,6 @@ class InputTagsElement extends AbstractFormElement
         return $resultArray;
     }
 
-
     /**
      * @param string $fieldName
      * @param string $fieldId
@@ -164,7 +166,7 @@ class InputTagsElement extends AbstractFormElement
             ]),
 
             'data-formengine-input-name' => (string)$parameterArray['itemFormElName'],
-            'data-role' => 'tagsinput'
+            'data-role' => 'tagsinput',
         ];
 
         $maxLength = $config['max'] ?? 0;
@@ -198,7 +200,7 @@ class InputTagsElement extends AbstractFormElement
                     $evalObj = GeneralUtility::makeInstance($func);
                     if (method_exists($evalObj, 'deevaluateFieldValue')) {
                         $_params = [
-                            'value' => $itemValue
+                            'value' => $itemValue,
                         ];
                         $itemValue = $evalObj->deevaluateFieldValue($_params);
                     }
