@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Cpsit\CpsUtility\Traits;
 
 /*
@@ -9,8 +12,8 @@ namespace Cpsit\CpsUtility\Traits;
  * of the License, or any later version.
  */
 
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 use Cpsit\CpsUtility\Utility\TypoScriptUtility;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Parse stdWrap options in a typoScript array

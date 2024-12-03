@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /*
@@ -90,5 +91,4 @@ class TypoScriptUtility
 
         return $typoScriptService->convertTypoScriptArrayToPlainArray($plainArray);
     }
-
 }

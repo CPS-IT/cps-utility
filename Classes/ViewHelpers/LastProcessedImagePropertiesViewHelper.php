@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Cpsit\CpsUtility\ViewHelpers;
@@ -18,7 +19,6 @@ use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
 use TYPO3Fluid\Fluid\Core\ViewHelper\Traits\CompileWithRenderStatic;
 
-
 /**
  * Get last processed image properties
  * @deprecated Replace with ProcessedMediaPropertiesViewHelper
@@ -28,7 +28,7 @@ class LastProcessedImagePropertiesViewHelper extends ProcessedMediaPropertiesVie
 {
     use CompileWithRenderStatic;
 
-    const ALLOWED_PROPERTIES = ['width', 'height', 'size'];
+    public const ALLOWED_PROPERTIES = ['width', 'height', 'size'];
 
     /**
      * Initialize arguments
@@ -51,14 +51,18 @@ class LastProcessedImagePropertiesViewHelper extends ProcessedMediaPropertiesVie
     ) {
         $typo3Version = new Typo3Version();
         if ($typo3Version->getMajorVersion() > 10) {
-            throw new \RuntimeException(sprintf('
+            throw new \RuntimeException(sprintf(
+                '
             TYPO3 V-%s does not longer support this view helper. Use ProcessedMediaPropertiesViewHelper instead.',
-                $typo3Version->getMajorVersion()));
+                $typo3Version->getMajorVersion()
+            ));
         }
 
         if (!in_array($arguments['property'], self::ALLOWED_PROPERTIES)) {
-            throw new \RuntimeException(sprintf('The value "%s" is not supported in LastProcessedImageSizeViewHelper',
-                $arguments['property']));
+            throw new \RuntimeException(sprintf(
+                'The value "%s" is not supported in LastProcessedImageSizeViewHelper',
+                $arguments['property']
+            ));
         }
 
         $lastImageInfo = self::getTypoScriptFrontendController()->lastImageInfo;
@@ -67,7 +71,7 @@ class LastProcessedImagePropertiesViewHelper extends ProcessedMediaPropertiesVie
             $mediaOnPage = GeneralUtility::makeInstance(AssetCollector::class)->getMedia();
             $media = $mediaOnPage[$lastImageInfo[3]] ?? $mediaOnPage[ltrim($lastImageInfo[3], '/')] ?? null;
 
-            if(is_array($media) && !empty($media)) {
+            if (is_array($media) && !empty($media)) {
                 $getter = 'get' . ucfirst($arguments['property']);
                 if (method_exists(__CLASS__, $getter)) {
                     return self::$getter($media);

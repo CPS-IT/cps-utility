@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Cpsit\CpsUtility\ViewHelpers\Format;
@@ -24,9 +25,6 @@ class ReplaceViewHelper extends AbstractViewHelper
 {
     use CompileWithContentArgumentAndRenderStatic;
 
-    /**
-     * @return void
-     */
     public function initializeArguments()
     {
         $this->registerArgument('content', 'string', 'Content in which to perform replacement');
@@ -47,9 +45,9 @@ class ReplaceViewHelper extends AbstractViewHelper
         $content = $renderChildrenClosure();
         $substring = $arguments['substring'];
         $replacement = $arguments['replacement'];
-        $count = (integer) $arguments['count'];
-        $caseSensitive = (boolean) $arguments['caseSensitive'];
-        $function = (true === $caseSensitive ? 'str_replace' : 'str_ireplace');
+        $count = (int)$arguments['count'];
+        $caseSensitive = (bool)$arguments['caseSensitive'];
+        $function = ($caseSensitive === true ? 'str_replace' : 'str_ireplace');
         return $function($substring, $replacement, $content, $count);
     }
 }

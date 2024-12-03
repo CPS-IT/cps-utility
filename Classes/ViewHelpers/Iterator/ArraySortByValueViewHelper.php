@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /*
  * This file is part of the cps_utility project.
  *
@@ -48,12 +51,12 @@ class ArraySortByValueViewHelper extends AbstractViewHelper
     use CompileWithContentArgumentAndRenderStatic;
 
     /**
-     * @var boolean
+     * @var bool
      */
     protected $escapeChildren = false;
 
     /**
-     * @var boolean
+     * @var bool
      */
     protected $escapeOutput = false;
 
@@ -69,9 +72,8 @@ class ArraySortByValueViewHelper extends AbstractViewHelper
         'SORT_NUMERIC',
         'SORT_NATURAL',
         'SORT_LOCALE_STRING',
-        'SORT_FLAG_CASE'
+        'SORT_FLAG_CASE',
     ];
-
 
     /**
      * Initialize arguments.
@@ -140,9 +142,9 @@ class ArraySortByValueViewHelper extends AbstractViewHelper
      */
     protected static function sortArray(array $array, array $arguments): array
     {
-        if ('ASC' === $arguments['order']) {
+        if ($arguments['order'] === 'ASC') {
             asort($array, static::getSortFlags($arguments));
-        } elseif ('RAND' === $arguments['order']) {
+        } elseif ($arguments['order'] === 'RAND') {
             $sortedKeys = array_keys($array);
             shuffle($sortedKeys);
             $backup = $array;
@@ -150,7 +152,7 @@ class ArraySortByValueViewHelper extends AbstractViewHelper
             foreach ($sortedKeys as $sortedKey) {
                 $array[$sortedKey] = $backup[$sortedKey];
             }
-        } elseif ('SHUFFLE' === $arguments['order']) {
+        } elseif ($arguments['order'] === 'SHUFFLE') {
             shuffle($array);
         } else {
             arsort($array, static::getSortFlags($arguments));

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Cpsit\CpsUtility\ViewHelpers;
@@ -29,7 +30,6 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\ViewHelperInterface;
  * <output>
  *    <title>TYPO3 is awesome</title>
  * </output>
- *
  */
 class TitleTagViewHelper extends AbstractViewHelper implements ViewHelperInterface
 {

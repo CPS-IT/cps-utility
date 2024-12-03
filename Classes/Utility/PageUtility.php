@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /*
@@ -12,8 +13,6 @@ declare(strict_types=1);
 namespace Cpsit\CpsUtility\Utility;
 
 use Cpsit\CpsUtility\Domain\Repository\PageRepository;
-use TYPO3\CMS\Core\Context\Context;
-use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 
@@ -42,15 +41,14 @@ class PageUtility
     {
         if (empty($storagePages)) {
             try {
-                if(!isset($GLOBALS['TSFE']))
-                {
+                if (!isset($GLOBALS['TSFE'])) {
                     throw new \Exception('missing TSFE');
                 }
                 // make sure we are in frontend context
                 /** @var TypoScriptFrontendController $frontend */
                 $frontend = $GLOBALS['TSFE'];
                 $storagePages = [
-                    (int)$frontend->id
+                    (int)$frontend->id,
                 ];
             } catch (\Exception $exception) {
                 // silently return an empty array
@@ -60,12 +58,11 @@ class PageUtility
             $storagePages = GeneralUtility::intExplode(',', $storagePages);
         }
 
-        if (intval($depth) > 0) {
+        if ((int)$depth > 0) {
             $storagePages = $this->expandPagesWithSubPages($storagePages, (int)$depth);
         }
         return $storagePages;
     }
-
 
     /**
      * Retrieves subpages of given page(s)  recursively until depth ist reached

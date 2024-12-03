@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /*
  * This file is part of the cps_utility project.
@@ -39,7 +40,6 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\Traits\CompileWithContentArgumentAndRenderS
  *          </f:for>]
  *     </f:spaceless>
  * </f:section>
- *
  */
 class DecodeViewHelper extends AbstractViewHelper
 {

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Cpsit\CpsUtility\ViewHelpers;
@@ -36,7 +37,6 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\Traits\CompileWithRenderStatic;
  *     title="RSS 2.0"
  *     href="uri to this page and type 9818" />
  * </output>
- *
  */
 class HeaderDataViewHelper extends AbstractViewHelper
 {

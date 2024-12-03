@@ -1,4 +1,5 @@
 <?php
+
 $EM_CONF[$_EXTKEY] = [
     'title' => 'CPS utility',
     'description' => 'Collection of utilities to use in TYPO3 Extensions.',
@@ -10,10 +11,10 @@ $EM_CONF[$_EXTKEY] = [
     'author' => 'Vladimir Falcon Piva',
     'author_email' => 'v.falcon@familie-redlich.de',
     'author_company' => 'Familie Redlich',
-    'version' => '2.0.0',
+    'version' => '2.0.1',
     'constraints' => [
         'depends' => [
-            'typo3' => '10.2.0-11.5.99'
+            'typo3' => '11.5.0-12.4.99',
         ],
         'conflicts' => [
         ],

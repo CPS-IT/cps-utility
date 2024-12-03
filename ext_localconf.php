@@ -1,8 +1,8 @@
 <?php
+
 defined('TYPO3') or die();
 
 (function ($extKey = Cpsit\CpsUtility\Configuration\SettingsInterface::KEY) {
-
     $GLOBALS['TYPO3_CONF_VARS']['SYS']['formEngine']['nodeRegistry'][1631886776] = [
         'nodeName' => 'inputTags',
         'priority' => 40,
@@ -21,5 +21,4 @@ defined('TYPO3') or die();
     $rendererRegistry = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Core\Resource\Rendering\RendererRegistry::class);
     $rendererRegistry->registerRendererClass(\Cpsit\CpsUtility\Rendering\YouTubeRenderer::class);
     $rendererRegistry->registerRendererClass(\Cpsit\CpsUtility\Rendering\VimeoRenderer::class);
-
 })();
