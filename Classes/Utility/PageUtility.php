@@ -76,7 +76,6 @@ class PageUtility
         $pidList = $pages;
         // iterate through root-page ids and merge to array
         foreach ($pages as $pid) {
-            // need to cast because getTreeList does not always return a string
             $treeList = $this->pageRepository->getTreeList($pid, $depth, 0, 'deleted = 0');
             if (!empty($treeList)) {
                 $pidList = array_merge($pidList, explode(',', $treeList));
