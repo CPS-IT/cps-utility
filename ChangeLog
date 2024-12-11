@@ -1,3 +1,6 @@
+2024-12-11         [RELEASE] Release of cps_utility 2.0.2 (Dirk Wenzel)
+2024-12-11 2752814 [BUGFIX] fixed error caused by invalid return value in PageRepository::getTreeList (Dirk Wenzel)
+
 2024-12-03         [RELEASE] Release of cps_utility 2.0.1 (Vladimir Falcón Piva)
 2024-12-03 d5876d0 Refactor source code with phpcs (Vladimir Falcón Piva)
 
