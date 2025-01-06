@@ -45,7 +45,7 @@ class PageRepository extends \TYPO3\CMS\Core\Domain\Repository\PageRepository
             $id = abs($id);
         }
         if ($begin === 0) {
-            $theList = (string) $id;
+            $theList = (string)$id;
         } else {
             $theList = '';
         }
