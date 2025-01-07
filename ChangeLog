@@ -1,3 +1,6 @@
+2025-01-07         [RELEASE] Release of cps_utility 2.0.5 (Vladimir Falcón Piva)
+2025-01-07 58628a8 Refactor source formating phpcs fix (Vladimir Falcón Piva)
+
 2025-01-07         [RELEASE] Release of cps_utility 2.0.4 (Vladimir Falcón Piva)
 2025-01-07 f34bdf6 64284 Avoid fatal exeption if ArraySortByValueViewHelper is called with a null or empty subject (Vladimir Falcón Piva)
 
