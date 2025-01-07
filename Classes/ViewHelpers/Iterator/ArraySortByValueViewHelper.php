@@ -122,7 +122,7 @@ class ArraySortByValueViewHelper extends AbstractViewHelper
     ): ?array {
         $subject = $arguments['subject'] ?? $renderChildrenClosure();
 
-        if(empty($subject)) {
+        if (empty($subject)) {
             return null;
         }
 
