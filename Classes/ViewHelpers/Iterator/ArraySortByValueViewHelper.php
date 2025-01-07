@@ -121,6 +121,11 @@ class ArraySortByValueViewHelper extends AbstractViewHelper
         RenderingContextInterface $renderingContext
     ): ?array {
         $subject = $arguments['subject'] ?? $renderChildrenClosure();
+
+        if(empty($subject)) {
+            return null;
+        }
+
         $subject = static::arrayFromArrayOrTraversableOrCSVStatic($subject);
         $sorted = static::sortArray($subject, $arguments);
 
