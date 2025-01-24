@@ -1,3 +1,6 @@
+2025-01-24         [RELEASE] Release of cps_utility 2.1.0 (Dirk Wenzel)
+2025-01-24 8ffe30b [TASK] NotificationService, PageLinkService and Dto/NotificationRequest ported (Dirk Wenzel)
+
 2025-01-07         [RELEASE] Release of cps_utility 2.0.5 (Vladimir Falcón Piva)
 2025-01-07 58628a8 Refactor source formating phpcs fix (Vladimir Falcón Piva)
 
