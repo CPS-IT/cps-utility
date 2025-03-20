@@ -33,7 +33,7 @@ class LastProcessedImagePropertiesViewHelper extends ProcessedMediaPropertiesVie
     /**
      * Initialize arguments
      */
-    public function initializeArguments()
+    public function initializeArguments(): void
     {
         $this->registerArgument('property', 'string', 'either width or height', true);
     }
@@ -55,14 +55,14 @@ class LastProcessedImagePropertiesViewHelper extends ProcessedMediaPropertiesVie
                 '
             TYPO3 V-%s does not longer support this view helper. Use ProcessedMediaPropertiesViewHelper instead.',
                 $typo3Version->getMajorVersion()
-            ));
+            ), 3739699144);
         }
 
         if (!in_array($arguments['property'], self::ALLOWED_PROPERTIES)) {
             throw new \RuntimeException(sprintf(
                 'The value "%s" is not supported in LastProcessedImageSizeViewHelper',
                 $arguments['property']
-            ));
+            ), 2981580848);
         }
 
         $lastImageInfo = self::getTypoScriptFrontendController()->lastImageInfo;

@@ -80,7 +80,7 @@ class ArraySortByValueViewHelper extends AbstractViewHelper
      *
      * @throws \TYPO3Fluid\Fluid\Core\ViewHelper\Exception
      */
-    public function initializeArguments()
+    public function initializeArguments(): void
     {
         $this->registerArgument('subject', 'mixed', 'The array/Traversable instance to sort');
         $this->registerArgument(

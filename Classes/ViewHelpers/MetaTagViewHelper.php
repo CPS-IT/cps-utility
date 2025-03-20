@@ -45,7 +45,7 @@ class MetaTagViewHelper extends AbstractTagBasedViewHelper
     /**
      * Arguments initialization
      */
-    public function initializeArguments()
+    public function initializeArguments(): void
     {
         $this->registerTagAttribute('property', 'string', 'Property of meta tag');
         $this->registerTagAttribute('name', 'string', 'Content of meta tag using the name attribute');
@@ -57,7 +57,7 @@ class MetaTagViewHelper extends AbstractTagBasedViewHelper
     /**
      * Renders a meta tag
      */
-    public function render()
+    public function render(): void
     {
         $useCurrentDomain = $this->arguments['useCurrentDomain'];
         $forceAbsoluteUrl = $this->arguments['forceAbsoluteUrl'];
