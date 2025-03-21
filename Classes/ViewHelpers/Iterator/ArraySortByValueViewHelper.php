@@ -12,9 +12,6 @@ declare(strict_types=1);
 
 namespace Cpsit\CpsUtility\ViewHelpers\Iterator;
 
-use Closure;
-use Exception;
-use Traversable;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
@@ -110,14 +107,14 @@ class ArraySortByValueViewHelper extends AbstractViewHelper
      * Sorts an array
      *
      * @param array $arguments
-     * @param Closure $renderChildrenClosure
+     * @param \Closure $renderChildrenClosure
      * @param RenderingContextInterface $renderingContext
      * @return array|null
-     * @throws Exception
+     * @throws \Exception
      */
     public static function renderStatic(
         array $arguments,
-        Closure $renderChildrenClosure,
+        \Closure $renderChildrenClosure,
         RenderingContextInterface $renderingContext
     ): ?array {
         $subject = $arguments['subject'] ?? $renderChildrenClosure();
@@ -143,7 +140,7 @@ class ArraySortByValueViewHelper extends AbstractViewHelper
      * @param array $array
      * @param array $arguments
      * @return array
-     * @throws Exception
+     * @throws \Exception
      */
     protected static function sortArray(array $array, array $arguments): array
     {
@@ -171,7 +168,7 @@ class ArraySortByValueViewHelper extends AbstractViewHelper
      *
      * @param array|string $arguments
      * @return int
-     * @throws Exception
+     * @throws \Exception
      */
     protected static function getSortFlags(mixed $arguments): int
     {
@@ -179,7 +176,7 @@ class ArraySortByValueViewHelper extends AbstractViewHelper
         $flags = 0;
         foreach ($constants as $constant) {
             if (!in_array($constant, static::$allowedSortFlags)) {
-                throw new Exception(
+                throw new \Exception(
                     'The constant "' . $constant . '" you\'re trying to use as a sortFlag is not allowed. Allowed ' .
                     'constants are: ' . implode(', ', static::$allowedSortFlags) . '.',
                     1676474590
@@ -191,19 +188,19 @@ class ArraySortByValueViewHelper extends AbstractViewHelper
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     protected static function arrayFromArrayOrTraversableOrCSVStatic($candidate, bool $useKeys = true): array
     {
         if (is_array($candidate)) {
             return $candidate;
         }
-        if ($candidate instanceof Traversable) {
+        if ($candidate instanceof \Traversable) {
             return iterator_to_array($candidate, $useKeys);
         }
         if (is_string($candidate)) {
             return GeneralUtility::trimExplode(',', $candidate, true);
         }
-        throw new Exception('Unsupported input type; cannot convert to array!', 1676474590);
+        throw new \Exception('Unsupported input type; cannot convert to array!', 1676474590);
     }
 }
