@@ -14,7 +14,6 @@ namespace Cpsit\CpsUtility\Form\Element;
 
 use Cpsit\CpsUtility\Configuration\SettingsInterface as SI;
 use TYPO3\CMS\Backend\Form\Element\AbstractFormElement;
-use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
@@ -39,7 +38,6 @@ use TYPO3\CMS\Core\Utility\StringUtility;
  */
 class InputTagsElement extends AbstractFormElement
 {
-
     public function render(): array
     {
         $resultArray = $this->initializeResultArray();
@@ -62,8 +60,11 @@ class InputTagsElement extends AbstractFormElement
         $itemValue = $parameterArray['itemFormElValue'] ?? '';
         $tagsId = StringUtility::getUniqueId('formengine-tags-');
         $width = $this->formMaxWidth(
-            MathUtility::forceIntegerInRange($config['size'] ?? $this->defaultInputWidth, $this->minimumInputWidth,
-                $this->maxInputWidth)
+            MathUtility::forceIntegerInRange(
+                $config['size'] ?? $this->defaultInputWidth,
+                $this->minimumInputWidth,
+                $this->maxInputWidth
+            )
         );
         $attributes = [
             'data-role' => 'tagsinput',
@@ -93,8 +94,10 @@ class InputTagsElement extends AbstractFormElement
         $html[] = '<div class="form-control-wrap" style="max-width: ' . $width . 'px">';
         $html[] = '<div class="form-wizards-wrap">';
         $html[] = '<div class="form-wizards-element">';
-        $html[] = '<input type="text" ' . GeneralUtility::implodeAttributes($attributes,
-                true) . ' name="' . htmlspecialchars($elementName) . '">';
+        $html[] = '<input type="text" ' . GeneralUtility::implodeAttributes(
+            $attributes,
+            true
+        ) . ' name="' . htmlspecialchars($elementName) . '">';
         $html[] = '</select>';
         $html[] = '</div>';
         if (!empty($fieldControlHtml)) {
@@ -112,7 +115,6 @@ class InputTagsElement extends AbstractFormElement
         $html[] = '</div>';
         $html[] = '</div>';
         $html[] = '</div>';
-
 
         $resultArray['html'] = implode(LF, $html);
         $resultArray['javaScriptModules'][] = JavaScriptModuleInstruction::create(
