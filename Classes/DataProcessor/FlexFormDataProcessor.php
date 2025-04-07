@@ -18,19 +18,20 @@ use TYPO3\CMS\Core\Utility\Exception\MissingArrayPathException;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 use TYPO3\CMS\Frontend\ContentObject\DataProcessorInterface;
+use TYPO3\CMS\Frontend\DataProcessing\FlexFormProcessor;
 
 /**
- * Transform into array variables stored in flex form
+ * Extends the FlexFormProcessor to be able to get values by path.
  *
- * 10 = Cpsit\CpsUtility\DataProcessing\FlexFormDataProcessor
+ * 10 = FlexForm
  * 10 {
- *      field = pi_flexform
+ *      fieldName = pi_flexform
  *      as = flexFormData
  *      valuePath = data|sDEF
  *      valuePathDelimiter = |
  * }
  */
-class FlexFormDataProcessor implements DataProcessorInterface
+class FlexFormDataProcessor extends FlexFormProcessor
 {
     /**
      * @param ContentObjectRenderer $cObj
@@ -44,28 +45,22 @@ class FlexFormDataProcessor implements DataProcessorInterface
         array $contentObjectConfiguration,
         array $processorConfiguration,
         array $processedData
-    ) {
-        $field = $processorConfiguration['field'] ?? 'pi_flexform';
-        $valuePath = $processorConfiguration['valuePath'] ?? false;
+    ): array {
+        $processedData = parent::process($cObj, $contentObjectConfiguration, $processorConfiguration, $processedData);
+
+        $valuePath = $processorConfiguration['valuePath'] ?? '';
         $valuePathDelimiter = $processorConfiguration['valuePathDelimiter'] ?? '|';
-        $variableName = $processorConfiguration['as'] ?? 'flexFormData';
-
-        $flexForm = $cObj->data[$field] ?? '';
-
-        if ($flexForm && $variableName) {
-            $flexFormArray = GeneralUtility::makeInstance(FlexFormService::class)
-                ->convertFlexFormContentToArray($flexForm);
-
-            if ($valuePath) {
-                try {
-                    $flexFormArray = ArrayUtility::getValueByPath($flexFormArray, $valuePath, $valuePathDelimiter);
-                } catch (MissingArrayPathException $e) {
-                    $flexFormArray = null;
-                }
-            }
-            $processedData[$variableName] = $flexFormArray;
+        if (empty($valuePath)) {
+            return $processedData;
         }
-
+        $targetVariableName = $cObj->stdWrapValue('as', $processorConfiguration, 'flexFormData');
+        $flexFormArray = $processedData[$targetVariableName] ?? [];
+        try {
+            $flexFormArray = ArrayUtility::getValueByPath($flexFormArray, $valuePath, $valuePathDelimiter);
+        } catch (MissingArrayPathException $e) {
+            $flexFormArray = [];
+        }
+        $processedData[$targetVariableName] = $flexFormArray;
         return $processedData;
     }
 }
