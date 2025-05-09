@@ -1,3 +1,12 @@
+2025-05-09         [RELEASE] Release of cps-utility 3.0.0 (Vladimir Falcón Piva)
+2025-04-07 c7ca7b1 Refactor with rector (Vladimir Falcón Piva)
+2025-04-07 a1edeb4 [BRAKING] removed deprecated classes. (Vladimir Falcón Piva)
+2025-04-07 e113193 Lint fix php sources (Vladimir Falcón Piva)
+2025-04-06 972a8a7 [BREAKING] Replace JS bibliothek for tag field. Tags saved as JSON string in db. (Vladimir Falcón Piva)
+2025-04-04 3c5f7ac Refactor editor config (Vladimir Falcón Piva)
+2025-03-21 478787d Refactor plugin registration and php fix (Vladimir Falcón Piva)
+2025-03-20 8415d07 Refactor with rector. Functionality was not tested. (Vladimir Falcón Piva)
+
 2025-01-24         [RELEASE] Release of cps_utility 2.1.0 (Dirk Wenzel)
 2025-01-24 8ffe30b [TASK] NotificationService, PageLinkService and Dto/NotificationRequest ported (Dirk Wenzel)
 
