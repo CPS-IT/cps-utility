@@ -44,7 +44,7 @@ class TitleTagViewHelper extends AbstractViewHelper implements ViewHelperInterfa
         array $arguments,
         \Closure $renderChildrenClosure,
         RenderingContextInterface $renderingContext
-    ) {
+    ): void {
         $content = trim($renderChildrenClosure());
         if (!empty($content)) {
             GeneralUtility::makeInstance(TitleProvider::class)->setTitle($content);

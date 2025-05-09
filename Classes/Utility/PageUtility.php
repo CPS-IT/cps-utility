@@ -42,7 +42,7 @@ class PageUtility
         if (empty($storagePages)) {
             try {
                 if (!isset($GLOBALS['TSFE'])) {
-                    throw new \Exception('missing TSFE');
+                    throw new \Exception('missing TSFE', 5989730071);
                 }
                 // make sure we are in frontend context
                 /** @var TypoScriptFrontendController $frontend */

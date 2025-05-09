@@ -25,7 +25,7 @@ class ReplaceViewHelper extends AbstractViewHelper
 {
     use CompileWithContentArgumentAndRenderStatic;
 
-    public function initializeArguments()
+    public function initializeArguments(): void
     {
         $this->registerArgument('content', 'string', 'Content in which to perform replacement');
         $this->registerArgument('substring', 'string', 'Substring to replace', true);

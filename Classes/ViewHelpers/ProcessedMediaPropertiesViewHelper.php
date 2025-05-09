@@ -32,7 +32,7 @@ class ProcessedMediaPropertiesViewHelper extends AbstractViewHelper implements V
     /**
      * Initialize arguments
      */
-    public function initializeArguments()
+    public function initializeArguments(): void
     {
         parent::initializeArguments();
         $this->registerArgument('property', 'string', 'either width or height', true);
@@ -56,7 +56,7 @@ class ProcessedMediaPropertiesViewHelper extends AbstractViewHelper implements V
             throw new \RuntimeException(sprintf(
                 'The value "%s" is not supported in LastProcessedImageSizeViewHelper',
                 $arguments['property']
-            ));
+            ), 3682001728);
         }
 
         $mediaOnPage = GeneralUtility::makeInstance(AssetCollector::class)->getMedia();

@@ -5,16 +5,13 @@ $EM_CONF[$_EXTKEY] = [
     'description' => 'Collection of utilities to use in TYPO3 Extensions.',
     'category' => 'misc',
     'state' => 'stable',
-    'uploadfolder' => 0,
-    'createDirs' => '',
-    'clearCacheOnLoad' => 1,
     'author' => 'Vladimir Falcon Piva',
     'author_email' => 'v.falcon@familie-redlich.de',
     'author_company' => 'Familie Redlich',
-    'version' => '2.1.0',
+    'version' => '3.0.0',
     'constraints' => [
         'depends' => [
-            'typo3' => '11.5.0-12.4.99',
+            'typo3' => '12.4.0-13.4.99',
         ],
         'conflicts' => [
         ],

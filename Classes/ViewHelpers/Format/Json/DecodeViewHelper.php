@@ -76,7 +76,7 @@ class DecodeViewHelper extends AbstractViewHelper
                 'Failure "%s" occured when running json_decode() for string: %s',
                 json_last_error_msg(),
                 $json
-            ));
+            ), 5400916655);
         }
     }
 }
