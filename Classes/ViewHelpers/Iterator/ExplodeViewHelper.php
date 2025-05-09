@@ -56,7 +56,7 @@ class ExplodeViewHelper extends AbstractViewHelper
      *
      * @throws \TYPO3Fluid\Fluid\Core\ViewHelper\Exception
      */
-    public function initializeArguments()
+    public function initializeArguments(): void
     {
         $this->registerArgument('content', 'string', 'String to be exploded by glue');
         $this->registerArgument(

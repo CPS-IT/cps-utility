@@ -25,14 +25,14 @@ Useful function to parse TypoScript configuration array.
 
 ## Data Processors
 
-Transform variables stored in flex form into an array.
+Extends the FlexFormProcessor to be able to get values by path.
 
 Usage:
 
 ```
-10 = Cpsit\CpsUtility\DataProcessor\FlexFormDataProcessor
+10 = FlexForm
 10 {
-     field = pi_flexform
+     fieldName = pi_flexform
      as = flexFormData
      valuePath = data|sDEF
      valuePathDelimiter = |

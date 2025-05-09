@@ -6,3 +6,7 @@ services:
 
   Cpsit\CpsUtility\:
     resource: '../Classes/*'
+
+  Cpsit\CpsUtility\DataProcessor\FlexFormDataProcessor:
+    tags:
+      - { name: 'data.processor', identifier: 'FlexForm' }

@@ -56,7 +56,7 @@ class ImplodeViewHelper extends AbstractViewHelper
      *
      * @throws \TYPO3Fluid\Fluid\Core\ViewHelper\Exception
      */
-    public function initializeArguments()
+    public function initializeArguments(): void
     {
         $this->registerArgument('content', 'array', 'Arras to be imploded by glue');
         $this->registerArgument(

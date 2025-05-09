@@ -18,6 +18,7 @@ namespace Cpsit\CpsUtility\Domain\Repository;
  *
  */
 
+use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryHelper;
 use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
@@ -55,7 +56,10 @@ class PageRepository extends \TYPO3\CMS\Core\Domain\Repository\PageRepository
             $queryBuilder->select('uid')
                 ->from('pages')
                 ->where(
-                    $queryBuilder->expr()->eq('pid', $queryBuilder->createNamedParameter($id, \PDO::PARAM_INT)),
+                    $queryBuilder->expr()->eq('pid', $queryBuilder->createNamedParameter(
+                        $id,
+                        Connection::PARAM_INT
+                    )),
                     $queryBuilder->expr()->eq('sys_language_uid', 0)
                 )
                 ->orderBy('uid');
