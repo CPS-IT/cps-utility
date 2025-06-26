@@ -120,6 +120,14 @@ Usage in TCA:
  ],
 ```
 
+## CKEditor Plugins
+
+### CkContent Plugin
+
+CKEditor 5 plugin that adds custom CSS classes to the editor content area for TYPO3 multi-site theming.
+
+[Documentation](Documentation/CkContentClass.md)
+
 ## Traits
 
 ### Trait to add cache tags to pages
