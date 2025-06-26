@@ -1,3 +1,6 @@
+2025-06-26         [RELEASE] Release of cps-utility 3.1.0 (Vladimir Falcón Piva)
+2025-06-26 0624823 Add CkContentClass plugin for CKEditor to support custom CSS classes in TYPO3 (Vladimir Falcón Piva)
+
 2025-05-09         [RELEASE] Release of cps-utility 3.0.0 (Vladimir Falcón Piva)
 2025-04-07 c7ca7b1 Refactor with rector (Vladimir Falcón Piva)
 2025-04-07 a1edeb4 [BRAKING] removed deprecated classes. (Vladimir Falcón Piva)
