@@ -32,7 +32,7 @@ trait ExtBaseTypoScriptStdWrapParserTrait
         $typoScriptUtility = GeneralUtility::makeInstance(TypoScriptUtility::class);
 
         $typoScript = $typoScriptUtility->convertPlainArrayToTypoScriptArray($typoScript);
-        $typoScript = $typoScriptUtility->stdWrapParser($typoScript, $this->configurationManager->getContentObject());
+        $typoScript = $typoScriptUtility->stdWrapParser($typoScript, $this->request->getAttribute('currentContentObject'));
 
         return $typoScriptUtility->convertTypoScriptArrayToPlainArray($typoScript);
     }
