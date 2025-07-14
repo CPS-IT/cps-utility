@@ -12,26 +12,22 @@ declare(strict_types=1);
 
 namespace Cpsit\CpsUtility\Utility;
 
-use Cpsit\CpsUtility\Domain\Repository\PageRepository;
+use TYPO3\CMS\Core\Domain\Repository\PageRepository;
+use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 
+#[Autoconfigure(public: true)]
 class PageUtility
 {
     /**
      * @var PageRepository
      */
-    protected PageRepository $pageRepository;
-
-    public function __construct(
-        PageRepository $pageRepository = null
-    ) {
-        $this->pageRepository = $pageRepository ?? GeneralUtility::makeInstance(PageRepository::class);
-    }
+    public function __construct(protected PageRepository $pageRepository
+    ) {}
 
     /**
      * Resolve storage page for a plugin
-     * Should to be used in frontend context only
      *
      * @param string $storagePages list of pages to resolved separated by comma
      * @param int $depth tree depth to add
@@ -39,29 +35,8 @@ class PageUtility
      */
     public function resolveStoragePages(string $storagePages = '0', int $depth = 0): array
     {
-        if (empty($storagePages)) {
-            try {
-                if (!isset($GLOBALS['TSFE'])) {
-                    throw new \Exception('missing TSFE', 5989730071);
-                }
-                // make sure we are in frontend context
-                /** @var TypoScriptFrontendController $frontend */
-                $frontend = $GLOBALS['TSFE'];
-                $storagePages = [
-                    (int)$frontend->id,
-                ];
-            } catch (\Exception $exception) {
-                // silently return an empty array
-                return [];
-            }
-        } else {
-            $storagePages = GeneralUtility::intExplode(',', $storagePages);
-        }
-
-        if ((int)$depth > 0) {
-            $storagePages = $this->expandPagesWithSubPages($storagePages, (int)$depth);
-        }
-        return $storagePages;
+        $pages = GeneralUtility::intExplode(',', $storagePages);
+        return $this->pageRepository->getPageIdsRecursive($pages, $depth);
     }
 
     /**
@@ -70,21 +45,15 @@ class PageUtility
      * @param array $pages
      * @param int $depth
      * @return int[] an array with all pageIds
+     * @deprecated
      */
     public function expandPagesWithSubPages(array $pages, int $depth = 0): array
     {
-        $pidList = $pages;
-        // iterate through root-page ids and merge to array
-        foreach ($pages as $pid) {
-            $treeList = $this->pageRepository->getTreeList($pid, $depth, 0, 'deleted = 0');
-            if (!empty($treeList)) {
-                $pidList = array_merge($pidList, explode(',', $treeList));
-            }
-        }
-        // cast to int
-        $pidList = GeneralUtility::intExplode(',', implode(',', $pidList));
-
+        trigger_error(
+            'The method ' . __METHOD__ . ' is deprecated and will be removed in new major version release. Use PageRepository::getPageIdsRecursive instead.',
+            E_USER_DEPRECATED
+        );
         // remove duplicates and return
-        return array_unique($pidList);
+        return $this->pageRepository->getPageIdsRecursive($pages, $depth);
     }
 }
