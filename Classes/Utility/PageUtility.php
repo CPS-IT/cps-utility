@@ -12,10 +12,9 @@ declare(strict_types=1);
 
 namespace Cpsit\CpsUtility\Utility;
 
-use TYPO3\CMS\Core\Domain\Repository\PageRepository;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
+use TYPO3\CMS\Core\Domain\Repository\PageRepository;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 
 #[Autoconfigure(public: true)]
 class PageUtility
@@ -23,7 +22,8 @@ class PageUtility
     /**
      * @var PageRepository
      */
-    public function __construct(protected PageRepository $pageRepository
+    public function __construct(
+        protected PageRepository $pageRepository
     ) {}
 
     /**
