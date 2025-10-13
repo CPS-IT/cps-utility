@@ -1,3 +1,9 @@
+2025-10-13         [RELEASE] Release of cps-utility 3.2.0 (Vladimir Falcón Piva)
+2025-07-14 e292e07 Lint php cps-utility (Vladimir Falcón Piva)
+2025-07-14 3d8b2a8 Upgrade cps-utility (Vladimir Falcón Piva)
+2025-07-01 683b89e Update stdWrapParser to use currentContentObject from request (Vladimir Falcón Piva)
+2025-06-30 fed8a82 [WIP] dependency corrected (Dirk Wenzel)
+
 2025-06-26         [RELEASE] Release of cps-utility 3.1.0 (Vladimir Falcón Piva)
 2025-06-26 0624823 Add CkContentClass plugin for CKEditor to support custom CSS classes in TYPO3 (Vladimir Falcón Piva)
 
