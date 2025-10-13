@@ -9,7 +9,9 @@ Collection of utilities to use in TYPO3 Extensions.
 
 ### expandPagesWithSubPages
 
-Retrieves subpages of given page(s)  recursively until depth ist reached.
+@depreprecated since 3.0, use `\TYPO3\CMS\Core\Domain\Repository\PageRepository::getPageIdsRecursive` instead.
+
+Retrieves subpages of given page(s) recursively until depth ist reached.
 
 Usage: `$pageUtility->expandPagesWithSubPages([...], 0)`
 
@@ -17,7 +19,7 @@ Usage: `$pageUtility->expandPagesWithSubPages([...], 0)`
 
 Resolve a list of given page(s)  recursively until depth ist reached.
 
-Usage: `$pageUtility->resolveStoragePages([...], 0)`
+Usage: `$pageUtility->resolveStoragePages('1,2,3', 0)`
 
 ### TypoScript Utility
 
@@ -61,7 +63,7 @@ ViewHelper to render the page title tag
 Example: Basic Example
 
 ```
-<cps:titleTag>{item.title}</fr:titleTag>
+<cps:titleTag>{item.title}</cps:titleTag>
 ```
 
 ### Meta Tag ViewHelper

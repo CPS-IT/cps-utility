@@ -17,7 +17,6 @@ use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
-use TYPO3Fluid\Fluid\Core\ViewHelper\Traits\CompileWithRenderStatic;
 use TYPO3Fluid\Fluid\Core\ViewHelper\ViewHelperInterface;
 
 /**
@@ -25,8 +24,6 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\ViewHelperInterface;
  */
 class ProcessedMediaPropertiesViewHelper extends AbstractViewHelper implements ViewHelperInterface
 {
-    use CompileWithRenderStatic;
-
     public const ALLOWED_PROPERTIES = ['width', 'height', 'extension', 'resource', 'origFile', 'modificationTime'];
 
     /**
@@ -45,28 +42,21 @@ class ProcessedMediaPropertiesViewHelper extends AbstractViewHelper implements V
      * @param RenderingContextInterface $renderingContext
      * @return int
      */
-    public static function renderStatic(
-        array $arguments,
-        \Closure $renderChildrenClosure,
-        RenderingContextInterface $renderingContext
-    ) {
+    public function render()
+    {
         $value = null;
-
-        if (!in_array($arguments['property'], self::ALLOWED_PROPERTIES)) {
+        if (!in_array($this->arguments['property'], self::ALLOWED_PROPERTIES)) {
             throw new \RuntimeException(sprintf(
                 'The value "%s" is not supported in LastProcessedImageSizeViewHelper',
-                $arguments['property']
+                $this->arguments['property']
             ), 3682001728);
         }
-
         $mediaOnPage = GeneralUtility::makeInstance(AssetCollector::class)->getMedia();
-
         // The keys in the returned array from the AssetCollector->getMedia
         // method ist not consistent between different TYPO3 versions
-        $media = $mediaOnPage[$arguments['resource']] ?? $mediaOnPage[ltrim($arguments['resource'], '/')] ?? null;
-
+        $media = $mediaOnPage[$this->arguments['resource']] ?? $mediaOnPage[ltrim($this->arguments['resource'], '/')] ?? null;
         if (is_array($media) && !empty($media)) {
-            $getter = 'get' . ucfirst($arguments['property']);
+            $getter = 'get' . ucfirst($this->arguments['property']);
 
             if (method_exists(__CLASS__, $getter)) {
                 $value = self::$getter($media);
