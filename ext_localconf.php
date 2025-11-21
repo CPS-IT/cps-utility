@@ -17,8 +17,12 @@ defined('TYPO3') or die();
         }
     }'));
 
+    // Register new Video Type
+    $GLOBALS['TYPO3_CONF_VARS']['SYS']['fal']['FileInfo']['mimeTypeCompatibility']['text/plain']['vimp'] = 'video/vimp';
+
     /** @var \TYPO3\CMS\Core\Resource\Rendering\RendererRegistry $rendererRegistry */
     $rendererRegistry = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Core\Resource\Rendering\RendererRegistry::class);
     $rendererRegistry->registerRendererClass(\Cpsit\CpsUtility\Rendering\YouTubeRenderer::class);
     $rendererRegistry->registerRendererClass(\Cpsit\CpsUtility\Rendering\VimeoRenderer::class);
+    $rendererRegistry->registerRendererClass(\Cpsit\CpsUtility\Rendering\VimpRenderer::class);
 })();
