@@ -1,3 +1,6 @@
+2025-12-12         [RELEASE] Release of cps-utility 3.3.1 (Vladimir Falcón Piva)
+2025-12-12 ef8b6de [TASK] Remove unused trait from ImplodeViewHelper class (Vladimir Falcón Piva)
+
 2025-12-12         [RELEASE] Release of cps-utility 3.3.0 (Vladimir Falcón Piva)
 2025-12-12 2c3350b [FEATURE] Add Slice and Contains ViewHelpers for array manipulation (Vladimir Falcón Piva)
 2025-12-12 1748195 [FEATURE] Add option to skip empty values in implode view helper (Vladimir Falcón Piva)
