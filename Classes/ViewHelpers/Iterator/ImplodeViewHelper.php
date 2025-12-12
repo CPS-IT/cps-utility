@@ -41,7 +41,7 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\Traits\CompileWithContentArgumentAndRenderS
  *
  * Imploded array in string.
  */
-class ImplodeViewHelper extends AbstractViewHelper
+final class ImplodeViewHelper extends AbstractViewHelper
 {
     use CompileWithContentArgumentAndRenderStatic;
 
