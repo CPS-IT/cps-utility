@@ -32,6 +32,12 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\ViewHelperInterface;
  */
 class TitleTagViewHelper extends AbstractViewHelper implements ViewHelperInterface
 {
+
+
+    public function __construct(protected TitleProvider $titleProvider)
+    {
+    }
+
     public function initializeArguments(): void
     {
         $this->registerArgument('content', 'string', 'String to be displayed as page title');
@@ -46,7 +52,7 @@ class TitleTagViewHelper extends AbstractViewHelper implements ViewHelperInterfa
     {
         $content = trim((string)$this->renderChildren());
         if (!empty($content)) {
-            GeneralUtility::makeInstance(TitleProvider::class)->setTitle($content);
+            $this->titleProvider->setTitle($content);
         }
     }
 
