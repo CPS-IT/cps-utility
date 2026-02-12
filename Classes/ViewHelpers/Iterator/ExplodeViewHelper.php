@@ -12,9 +12,7 @@ declare(strict_types=1);
 
 namespace Cpsit\CpsUtility\ViewHelpers\Iterator;
 
-use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
-use TYPO3Fluid\Fluid\Core\ViewHelper\Traits\CompileWithContentArgumentAndRenderStatic;
 
 /**
  * Explode view helper Split a string by a string.
@@ -44,8 +42,6 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\Traits\CompileWithContentArgumentAndRenderS
  */
 class ExplodeViewHelper extends AbstractViewHelper
 {
-    use CompileWithContentArgumentAndRenderStatic;
-
     /**
      * @var bool
      */
@@ -85,27 +81,28 @@ class ExplodeViewHelper extends AbstractViewHelper
 
     /**
      * Applies explode() on the specified value.
-     *
-     * @param array $arguments
-     * @param \Closure $renderChildrenClosure
-     * @param \TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface $renderingContext
-     * @return array|null
      */
-    public static function renderStatic(
-        array $arguments,
-        \Closure $renderChildrenClosure,
-        RenderingContextInterface $renderingContext
-    ): ?array {
-        $content = $arguments['content'] ?? $renderChildrenClosure();
-        $glue = $arguments['glue'];
-        $limit = $arguments['limit'] ?? PHP_INT_MAX;
-        $value = explode($glue, $content, $limit);
+    #[\Override]
+    public function render(): array
+    {
+        $content = $this->renderChildren();
+        $glue = $this->arguments['glue'];
+        $limit = $this->arguments['limit'] ?? PHP_INT_MAX;
+        $value = explode($glue, (string)$content, $limit);
 
-        if (!$arguments['as']) {
-            return $value;
+        if ($value === false) {
+            $value = [];
         }
 
-        $renderingContext->getVariableProvider()->add($arguments['as'], $value);
-        return null;
+        if ($this->hasArgument('as')) {
+            $this->renderingContext->getVariableProvider()->add($this->arguments['as'], $value);
+        }
+
+        return $value;
+    }
+
+    public function getContentArgumentName(): string
+    {
+        return 'content';
     }
 }

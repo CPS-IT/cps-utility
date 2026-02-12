@@ -20,12 +20,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class TitleProvider extends AbstractPageTitleProvider
 {
-    private const DEFAULT_PROPERTIES = 'title';
+    private const string DEFAULT_PROPERTIES = 'title';
 
-    /**
-     * @param array $record
-     * @param array $configuration
-     */
     public function setTitleFromArrayProperties(array $record, array $configuration = []): void
     {
         $title = '';

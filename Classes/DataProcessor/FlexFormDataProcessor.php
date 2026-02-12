@@ -30,13 +30,7 @@ use TYPO3\CMS\Frontend\DataProcessing\FlexFormProcessor;
  */
 class FlexFormDataProcessor extends FlexFormProcessor
 {
-    /**
-     * @param ContentObjectRenderer $cObj
-     * @param array $contentObjectConfiguration
-     * @param array $processorConfiguration
-     * @param array $processedData
-     * @return array
-     */
+    #[\Override]
     public function process(
         ContentObjectRenderer $cObj,
         array $contentObjectConfiguration,
@@ -54,7 +48,7 @@ class FlexFormDataProcessor extends FlexFormProcessor
         $flexFormArray = $processedData[$targetVariableName] ?? [];
         try {
             $flexFormArray = ArrayUtility::getValueByPath($flexFormArray, $valuePath, $valuePathDelimiter);
-        } catch (MissingArrayPathException $e) {
+        } catch (MissingArrayPathException) {
             $flexFormArray = [];
         }
         $processedData[$targetVariableName] = $flexFormArray;

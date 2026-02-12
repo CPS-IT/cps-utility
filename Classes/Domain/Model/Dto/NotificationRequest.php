@@ -75,9 +75,6 @@ class NotificationRequest
         return $this;
     }
 
-    /**
-     * @return string
-     */
     public function getTemplateName(): string
     {
         return $this->templateName;

@@ -11,9 +11,7 @@ declare(strict_types=1);
 
 namespace Cpsit\CpsUtility\ViewHelpers\Format\Json;
 
-use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
-use TYPO3Fluid\Fluid\Core\ViewHelper\Traits\CompileWithContentArgumentAndRenderStatic;
 
 /**
  * Converts the JSON encoded argument into a PHP variable
@@ -43,40 +41,49 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\Traits\CompileWithContentArgumentAndRenderS
  */
 class DecodeViewHelper extends AbstractViewHelper
 {
-    use CompileWithContentArgumentAndRenderStatic;
     /**
      * Initialize
      */
     public function initializeArguments(): void
     {
-        $this->registerArgument('json', 'string', 'json to decode', false);
+        $this->registerArgument(
+            'value',
+            'string',
+            'Json string to decode. If not in arguments then taken from tag content'
+        );
+        $this->registerArgument('name', 'string', 'Name of variable to create', false);
+    }
+
+    #[\Override]
+    public function render(): mixed
+    {
+        $json = trim((string)$this->renderChildren());
+        if ($json === '') {
+            return null;
+        }
+        $object = json_decode((string)$json, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            if ($GLOBALS['TYPO3_CONF_VARS']['FE']['debug'] ?? false) {
+                throw new \Exception(sprintf(
+                    'Failure "%s" occured when running json_decode() for string: %s',
+                    json_last_error_msg(),
+                    $json
+                ), 5400916655);
+            }
+        }
+
+        if ($this->hasArgument('name')) {
+            $this->renderingContext->getVariableProvider()->add($this->arguments['name'], $object);
+        }
+
+        return $object;
     }
 
     /**
-     * @param array $arguments
-     * @param \Closure $renderChildrenClosure
-     * @param RenderingContextInterface $renderingContext
-     * @return mixed
+     * Explicitly set argument name to be used as content.
      */
-    public static function renderStatic(
-        array $arguments,
-        \Closure $renderChildrenClosure,
-        RenderingContextInterface $renderingContext
-    ) {
-        $json = $renderChildrenClosure();
-        if (empty($json)) {
-            return null;
-        }
-        $object = json_decode($json, true);
-        if (json_last_error() === JSON_ERROR_NONE) {
-            return $object;
-        }
-        if ($GLOBALS['TYPO3_CONF_VARS']['FE']['debug'] ?? false) {
-            throw new \Exception(sprintf(
-                'Failure "%s" occured when running json_decode() for string: %s',
-                json_last_error_msg(),
-                $json
-            ), 5400916655);
-        }
+    public function getContentArgumentName(): string
+    {
+        return 'value';
     }
 }

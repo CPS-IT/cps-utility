@@ -40,17 +40,11 @@ trait FeCacheTagsTrait
         }
     }
 
-    /**
-     * @return bool
-     */
     protected function _isFrontEndContext(): bool
     {
         return !empty($GLOBALS['TSFE']) && is_object($GLOBALS['TSFE']);
     }
 
-    /**
-     * @return TypoScriptFrontendController
-     */
     protected function _getTypoScriptFrontendController(): TypoScriptFrontendController
     {
         return $GLOBALS['TSFE'] ?? GeneralUtility::makeInstance(TypoScriptFrontendController::class);

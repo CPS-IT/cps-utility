@@ -38,9 +38,8 @@ class VimeoRenderer extends CoreVimeoRenderer
      * for a specific file type/context.
      * For example create a video renderer for a certain storage/driver type.
      * Should be between 1 and 100, 100 is more important than 1
-     *
-     * @return int
      */
+    #[\Override]
     public function getPriority(): int
     {
         return 2;
@@ -49,13 +48,11 @@ class VimeoRenderer extends CoreVimeoRenderer
     /**
      * Render for given File(Reference) html output
      *
-     * @param FileInterface $file
      * @param int|string $width TYPO3 known format; examples: 220, 200m or 200c
      * @param int|string $height TYPO3 known format; examples: 220, 200m or 200c
-     * @param array $options
      * @param bool $usedPathsRelativeToCurrentScript See $file->getPublicUrl()
-     * @return string
      */
+    #[\Override]
     public function render(
         FileInterface $file,
         $width,
