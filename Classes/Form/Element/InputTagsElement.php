@@ -97,7 +97,7 @@ class InputTagsElement extends AbstractFormElement
         $html[] = '<input type="text" ' . GeneralUtility::implodeAttributes(
             $attributes,
             true
-        ) . ' name="' . htmlspecialchars($elementName) . '">';
+        ) . ' name="' . htmlspecialchars((string)$elementName) . '">';
         $html[] = '</select>';
         $html[] = '</div>';
         if (!empty($fieldControlHtml)) {

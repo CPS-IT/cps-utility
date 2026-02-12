@@ -12,7 +12,6 @@ namespace Cpsit\CpsUtility\ViewHelpers;
  * of the License, or any later version.
  */
 
-use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractTagBasedViewHelper;
 
@@ -41,10 +40,18 @@ class MetaTagViewHelper extends AbstractTagBasedViewHelper
      * @var string
      */
     protected $tagName = 'meta';
+    /**
+     * Constructor
+     */
+    public function __construct(private readonly \TYPO3\CMS\Core\Page\PageRenderer $pageRenderer)
+    {
+        parent::__construct();
+    }
 
     /**
      * Arguments initialization
      */
+    #[\Override]
     public function initializeArguments(): void
     {
         $this->registerTagAttribute('property', 'string', 'Property of meta tag');
@@ -57,6 +64,7 @@ class MetaTagViewHelper extends AbstractTagBasedViewHelper
     /**
      * Renders a meta tag
      */
+    #[\Override]
     public function render(): void
     {
         $useCurrentDomain = $this->arguments['useCurrentDomain'];
@@ -69,19 +77,19 @@ class MetaTagViewHelper extends AbstractTagBasedViewHelper
 
         // prepend current domain
         if ($forceAbsoluteUrl) {
-            $parsedPath = parse_url($this->arguments['content']);
+            $parsedPath = parse_url((string)$this->arguments['content']);
             if (is_array($parsedPath) && !isset($parsedPath['host'])) {
                 $this->tag->addAttribute(
                     'content',
                     rtrim(GeneralUtility::getIndpEnv('TYPO3_SITE_URL'), '/')
                     . '/'
-                    . ltrim($this->arguments['content'], '/')
+                    . ltrim((string)$this->arguments['content'], '/')
                 );
             }
         }
 
         if ($useCurrentDomain || (isset($this->arguments['content']) && !empty($this->arguments['content']))) {
-            $pageRenderer = GeneralUtility::makeInstance(PageRenderer::class);
+            $pageRenderer = $this->pageRenderer;
             if ($this->tag->hasAttribute('property')) {
                 $pageRenderer->setMetaTag(
                     'property',

@@ -22,10 +22,6 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 trait ExtBaseTypoScriptStdWrapParserTrait
 {
-    /**
-     * @param array $typoScript
-     * @return array
-     */
     public function parseTypoScriptStdWrap(array $typoScript): array
     {
         /** @var TypoScriptUtility $typoScriptUtility */

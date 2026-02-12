@@ -77,25 +77,30 @@ final class ImplodeViewHelper extends AbstractViewHelper
         );
     }
 
-    public function render(): ?string
+    #[\Override]
+    public function render(): string
     {
-        $content = $this->arguments['content'] ?? $this->renderChildren();
+        $content = $this->renderChildren();
         if (!is_array($content)) {
-            return null;
+            return '';
         }
         $glue = $this->arguments['glue'];
 
         if ($this->arguments['skipEmptyValues']) {
-            $content = array_filter(array_map('trim', $content));
+            $content = array_filter(array_map(trim(...), $content));
         }
 
         $value = implode($glue, $content);
 
-        if (!$this->arguments['as']) {
-            return $value;
+        if ($this->hasArgument('as')) {
+            $this->renderingContext->getVariableProvider()->add($this->arguments['as'], $value);
         }
 
-        $this->renderingContext->getVariableProvider()->add($this->arguments['as'], $value);
-        return null;
+        return $value;
+    }
+
+    public function getContentArgumentName(): string
+    {
+        return 'content';
     }
 }

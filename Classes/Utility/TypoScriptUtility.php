@@ -22,10 +22,7 @@ class TypoScriptUtility
      * Parse stdWrap options in a typoScript array
      * Expects a valid typoScript array
      *
-     * @param array $typoScript
-     * @param ContentObjectRenderer $contentObject
      * @param array $excludeKeys Exclude keys from parsing
-     * @return array
      */
     public function stdWrapParser(
         array $typoScript,
@@ -35,8 +32,8 @@ class TypoScriptUtility
         foreach ($typoScript as $key => $value) {
             // parse typo script if parseable
             if (is_array($value) && $this->isParseableTypoScriptObject($key, $typoScript)) {
-                $content = $typoScriptArray[rtrim($key, '.')] ?? '';
-                $typoScriptArray[rtrim($key, '.')] = $contentObject->stdWrap($content, $value);
+                $content = $typoScriptArray[rtrim((string)$key, '.')] ?? '';
+                $typoScriptArray[rtrim((string)$key, '.')] = $contentObject->stdWrap($content, $value);
                 continue;
             }
             // recursion
@@ -51,10 +48,6 @@ class TypoScriptUtility
 
     /**
      * Return true if typoscript array is parseable
-     *
-     * @param string $tsKey
-     * @param array $tsArray
-     * @return bool
      */
     public function isParseableTypoScriptObject(string $tsKey, array $tsArray): bool
     {
@@ -68,9 +61,6 @@ class TypoScriptUtility
 
     /**
      * Convert plain array to typoScript array
-     *
-     * @param array $plainArray
-     * @return array
      */
     public function convertPlainArrayToTypoScriptArray(array $plainArray): array
     {
@@ -81,9 +71,6 @@ class TypoScriptUtility
 
     /**
      * Convert typoScript array to plain array
-     *
-     * @param array $plainArray
-     * @return array
      */
     public function convertTypoScriptArrayToPlainArray(array $plainArray): array
     {
