@@ -13,7 +13,6 @@ namespace Cpsit\CpsUtility\ViewHelpers;
  */
 
 use Cpsit\CpsUtility\PageTitle\TitleProvider;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 use TYPO3Fluid\Fluid\Core\ViewHelper\ViewHelperInterface;
@@ -32,11 +31,7 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\ViewHelperInterface;
  */
 class TitleTagViewHelper extends AbstractViewHelper implements ViewHelperInterface
 {
-
-
-    public function __construct(protected TitleProvider $titleProvider)
-    {
-    }
+    public function __construct(protected TitleProvider $titleProvider) {}
 
     public function initializeArguments(): void
     {
