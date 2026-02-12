@@ -8,10 +8,10 @@ $EM_CONF[$_EXTKEY] = [
     'author' => 'Vladimir Falcon Piva',
     'author_email' => 'v.falcon@familie-redlich.de',
     'author_company' => 'Familie Redlich',
-    'version' => '3.3.1',
+    'version' => '3.3.2',
     'constraints' => [
         'depends' => [
-            'typo3' => '13.4.0-13.4.99',
+            'typo3' => '12.4.0-13.4.99',
         ],
         'conflicts' => [
         ],

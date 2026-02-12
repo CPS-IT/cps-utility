@@ -1,3 +1,9 @@
+2026-02-12         [RELEASE] Release of cps-utility 3.3.3 (Vladimir Falcón Piva)
+2026-02-12 8df08ff [TASK] Refactor TitleTagViewHelper to improve code readability (Vladimir Falcón Piva)
+2026-02-12 8bd1d77 [TASK] Update render method return type to nullable array (Vladimir Falcón Piva)
+2026-02-12 3076fe2 [FEATURE] Refactor TitleTagViewHelper to use dependency injection (Vladimir Falcón Piva)
+2026-02-12 3e9ed48 [TASK] Refactor code with tools rector fractor and php-csfixer (Vladimir Falcón Piva)
+
 2026-01-19         [RELEASE] Release of cps-utility 3.3.2 (Dirk Wenzel)
 2026-01-19 34ccf91 composer.json normalized (Dirk Wenzel)
 2025-12-12 eb698b7 [RELEASE] Release of cps-utility 3.3.1 (Vladimir Falcón Piva)
