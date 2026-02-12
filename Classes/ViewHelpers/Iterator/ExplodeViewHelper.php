@@ -83,7 +83,7 @@ class ExplodeViewHelper extends AbstractViewHelper
      * Applies explode() on the specified value.
      */
     #[\Override]
-    public function render(): array
+    public function render(): ?array
     {
         $content = $this->renderChildren();
         $glue = $this->arguments['glue'];
@@ -96,6 +96,7 @@ class ExplodeViewHelper extends AbstractViewHelper
 
         if ($this->hasArgument('as')) {
             $this->renderingContext->getVariableProvider()->add($this->arguments['as'], $value);
+            return null;
         }
 
         return $value;

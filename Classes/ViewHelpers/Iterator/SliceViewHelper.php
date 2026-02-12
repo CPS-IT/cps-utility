@@ -68,7 +68,7 @@ final class SliceViewHelper extends AbstractViewHelper
     }
 
     #[\Override]
-    public function render(): array
+    public function render(): ?array
     {
         $content = $this->renderChildren();
 
@@ -90,6 +90,7 @@ final class SliceViewHelper extends AbstractViewHelper
 
         if ($this->hasArgument('as')) {
             $this->renderingContext->getVariableProvider()->add($this->arguments['as'], $result);
+            return null;
         }
 
         return $result;

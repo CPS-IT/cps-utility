@@ -117,7 +117,7 @@ class ArraySortByValueViewHelper extends AbstractViewHelper
      * @throws \Exception
      */
     #[\Override]
-    public function render(): array
+    public function render(): ?array
     {
         $subject = $this->renderChildren();
 
@@ -130,6 +130,7 @@ class ArraySortByValueViewHelper extends AbstractViewHelper
 
         if ($this->hasArgument('as')) {
             $this->renderingContext->getVariableProvider()->add($this->arguments['as'], $sorted);
+            return null;
         }
 
         return $sorted;
