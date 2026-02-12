@@ -12,8 +12,6 @@ namespace Cpsit\CpsUtility\ViewHelpers;
  * of the License, or any later version.
  */
 
-use TYPO3\CMS\Core\Page\PageRenderer;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 
@@ -39,14 +37,16 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
  */
 class HeaderDataViewHelper extends AbstractViewHelper
 {
+    public function __construct(private readonly \TYPO3\CMS\Core\Page\PageRenderer $pageRenderer) {}
     /**
      * @param array $arguments
      * @param \Closure $renderChildrenClosure
      * @param RenderingContextInterface $renderingContext
      */
+    #[\Override]
     public function render(): void
     {
-        $pageRenderer = GeneralUtility::makeInstance(PageRenderer::class);
+        $pageRenderer = $this->pageRenderer;
         $pageRenderer->addHeaderData($this->renderChildren());
     }
 }

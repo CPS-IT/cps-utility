@@ -40,9 +40,8 @@ class YouTubeRenderer extends CoreYouTubeRenderer
      * for a specific file type/context.
      * For example create a video renderer for a certain storage/driver type.
      * Should be between 1 and 100, 100 is more important than 1
-     *
-     * @return int
      */
+    #[\Override]
     public function getPriority(): int
     {
         return 2;
@@ -51,13 +50,11 @@ class YouTubeRenderer extends CoreYouTubeRenderer
     /**
      * Render for given File(Reference) html output
      *
-     * @param FileInterface $file
      * @param int|string $width TYPO3 known format; examples: 220, 200m or 200c
      * @param int|string $height TYPO3 known format; examples: 220, 200m or 200c
-     * @param array $options
      * @param bool $usedPathsRelativeToCurrentScript See $file->getPublicUrl()
-     * @return string
      */
+    #[\Override]
     public function render(
         FileInterface $file,
         $width,
@@ -80,14 +77,13 @@ class YouTubeRenderer extends CoreYouTubeRenderer
 
     /**
      * @internal
-     * @param array $attributes
-     * @return string
      */
+    #[\Override]
     protected function implodeAttributes(array $attributes): string
     {
         $attributeList = [];
         foreach ($attributes as $name => $value) {
-            $name = preg_replace('/[^\p{L}0-9_.-]/u', '', $name);
+            $name = preg_replace('/[^\p{L}0-9_.-]/u', '', (string)$name);
             if ($value === true) {
                 $attributeList[] = $name;
             } else {

@@ -67,16 +67,13 @@ final class SliceViewHelper extends AbstractViewHelper
         );
     }
 
+    #[\Override]
     public function render(): ?array
     {
-        $content = $this->arguments['content'] ?? $this->renderChildren();
-
-        if ($content === null) {
-            throw new Exception('ArraySliceViewHelper requires a subject');
-        }
+        $content = $this->renderChildren();
 
         if (!is_array($content)) {
-            throw new Exception('ArraySliceViewHelper requires an array as subject');
+            throw new Exception('ArraySliceViewHelper requires an array as subject', 2036361983);
         }
 
         $length = null;
@@ -91,12 +88,16 @@ final class SliceViewHelper extends AbstractViewHelper
             (bool)$this->arguments['preserveKeys']
         );
 
-        if (!$this->hasArgument['as']) {
-            return $result;
+        if ($this->hasArgument('as')) {
+            $this->renderingContext->getVariableProvider()->add($this->arguments['as'], $result);
+            return null;
         }
 
-        $this->renderingContext->getVariableProvider()->add($this->arguments['as'], $result);
-        return null;
+        return $result;
     }
 
+    public function getContentArgumentName(): string
+    {
+        return 'content';
+    }
 }

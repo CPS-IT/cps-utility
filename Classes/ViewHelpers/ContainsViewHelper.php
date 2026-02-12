@@ -71,6 +71,7 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractConditionViewHelper;
  */
 final class ContainsViewHelper extends AbstractConditionViewHelper
 {
+    #[\Override]
     public function initializeArguments(): void
     {
         parent::initializeArguments();
@@ -78,6 +79,7 @@ final class ContainsViewHelper extends AbstractConditionViewHelper
         $this->registerArgument('subject', 'mixed', 'The string or array that might contain the value (haystack)', true);
     }
 
+    #[\Override]
     public static function verdict(array $arguments, RenderingContextInterface $renderingContext): bool
     {
         if (is_scalar($arguments['subject'])) {
@@ -92,7 +94,7 @@ final class ContainsViewHelper extends AbstractConditionViewHelper
             $givenType = get_debug_type($value);
             throw new \InvalidArgumentException(
                 'If the argument "subject" is a string, then "value" must be scalar, but it is of type "'
-                . $givenType . '" in view helper "' . static::class . '".',
+                . $givenType . '" in view helper "' . self::class . '".',
                 1754978401,
             );
         }
@@ -105,7 +107,7 @@ final class ContainsViewHelper extends AbstractConditionViewHelper
             $givenType = get_debug_type($subject);
             throw new \InvalidArgumentException(
                 'The argument "subject" must be either a scalar value or an array/iterator, but is of type "'
-                . $givenType . '" in view helper "' . static::class . '".',
+                . $givenType . '" in view helper "' . self::class . '".',
                 1754978402,
             );
         }

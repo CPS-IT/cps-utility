@@ -42,11 +42,9 @@ class PageUtility
     /**
      * Retrieves subpages of given page(s)  recursively until depth ist reached
      *
-     * @param array $pages
-     * @param int $depth
      * @return int[] an array with all pageIds
-     * @deprecated
      */
+    #[\Deprecated]
     public function expandPagesWithSubPages(array $pages, int $depth = 0): array
     {
         trigger_error(

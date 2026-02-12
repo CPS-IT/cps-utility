@@ -14,7 +14,6 @@ namespace Cpsit\CpsUtility\ViewHelpers;
 
 use TYPO3\CMS\Core\Page\AssetCollector;
 use TYPO3\CMS\Core\Resource\File;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 use TYPO3Fluid\Fluid\Core\ViewHelper\ViewHelperInterface;
@@ -25,6 +24,7 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\ViewHelperInterface;
 class ProcessedMediaPropertiesViewHelper extends AbstractViewHelper implements ViewHelperInterface
 {
     public const ALLOWED_PROPERTIES = ['width', 'height', 'extension', 'resource', 'origFile', 'modificationTime'];
+    public function __construct(private readonly \TYPO3\CMS\Core\Page\AssetCollector $assetCollector) {}
 
     /**
      * Initialize arguments
@@ -42,6 +42,7 @@ class ProcessedMediaPropertiesViewHelper extends AbstractViewHelper implements V
      * @param RenderingContextInterface $renderingContext
      * @return int
      */
+    #[\Override]
     public function render()
     {
         $value = null;
@@ -51,14 +52,14 @@ class ProcessedMediaPropertiesViewHelper extends AbstractViewHelper implements V
                 $this->arguments['property']
             ), 3682001728);
         }
-        $mediaOnPage = GeneralUtility::makeInstance(AssetCollector::class)->getMedia();
+        $mediaOnPage = $this->assetCollector->getMedia();
         // The keys in the returned array from the AssetCollector->getMedia
         // method ist not consistent between different TYPO3 versions
-        $media = $mediaOnPage[$this->arguments['resource']] ?? $mediaOnPage[ltrim($this->arguments['resource'], '/')] ?? null;
+        $media = $mediaOnPage[$this->arguments['resource']] ?? $mediaOnPage[ltrim((string)$this->arguments['resource'], '/')] ?? null;
         if (is_array($media) && !empty($media)) {
-            $getter = 'get' . ucfirst($this->arguments['property']);
+            $getter = 'get' . ucfirst((string)$this->arguments['property']);
 
-            if (method_exists(__CLASS__, $getter)) {
+            if (method_exists(self::class, $getter)) {
                 $value = self::$getter($media);
             }
         }

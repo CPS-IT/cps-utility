@@ -13,7 +13,6 @@ namespace Cpsit\CpsUtility\ViewHelpers;
  */
 
 use Cpsit\CpsUtility\PageTitle\TitleProvider;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 use TYPO3Fluid\Fluid\Core\ViewHelper\ViewHelperInterface;
@@ -32,16 +31,28 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\ViewHelperInterface;
  */
 class TitleTagViewHelper extends AbstractViewHelper implements ViewHelperInterface
 {
+    public function __construct(protected TitleProvider $titleProvider) {}
+
+    public function initializeArguments(): void
+    {
+        $this->registerArgument('content', 'string', 'String to be displayed as page title');
+    }
     /**
      * @param array $arguments
      * @param \Closure $renderChildrenClosure
      * @param RenderingContextInterface $renderingContext
      */
+    #[\Override]
     public function render(): void
     {
-        $content = trim($this->renderChildren());
+        $content = trim((string)$this->renderChildren());
         if (!empty($content)) {
-            GeneralUtility::makeInstance(TitleProvider::class)->setTitle($content);
+            $this->titleProvider->setTitle($content);
         }
+    }
+
+    public function getContentArgumentName(): string
+    {
+        return 'content';
     }
 }
