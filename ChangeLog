@@ -1,3 +1,6 @@
+2026-02-13         [RELEASE] Release of cps-utility 3.4.0 (Vladimir Falcón Piva)
+2026-02-13 d6ab2c7 [FEATURE] Add DateFormat user function for locale-aware date formatting (Vladimir Falcón Piva)
+
 2026-02-12         [RELEASE] Release of cps-utility 3.3.3 (Vladimir Falcón Piva)
 2026-02-12 8df08ff [TASK] Refactor TitleTagViewHelper to improve code readability (Vladimir Falcón Piva)
 2026-02-12 8bd1d77 [TASK] Update render method return type to nullable array (Vladimir Falcón Piva)
