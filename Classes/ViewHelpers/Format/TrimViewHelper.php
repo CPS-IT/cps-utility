@@ -28,6 +28,7 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
  */
 class TrimViewHelper extends AbstractViewHelper
 {
+    #[\Override]
     public function initializeArguments(): void
     {
         $this->registerArgument('content', 'string', 'String to trim');
@@ -37,7 +38,6 @@ class TrimViewHelper extends AbstractViewHelper
     /**
      * Trims content by stripping off $characters
      */
-    #[\Override]
     #[\Deprecated(message: 'use \TYPO3Fluid\Fluid\ViewHelpers\Format\TrimViewHelper instead')]
     public function render(): string
     {

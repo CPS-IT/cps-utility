@@ -29,10 +29,11 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\ViewHelperInterface;
  *    <title>TYPO3 is awesome</title>
  * </output>
  */
-class TitleTagViewHelper extends AbstractViewHelper implements ViewHelperInterface
+class TitleTagViewHelper extends AbstractViewHelper
 {
     public function __construct(protected TitleProvider $titleProvider) {}
-
+    
+    #[\Override]
     public function initializeArguments(): void
     {
         $this->registerArgument('content', 'string', 'String to be displayed as page title');
@@ -42,7 +43,6 @@ class TitleTagViewHelper extends AbstractViewHelper implements ViewHelperInterfa
      * @param \Closure $renderChildrenClosure
      * @param RenderingContextInterface $renderingContext
      */
-    #[\Override]
     public function render(): void
     {
         $content = trim((string)$this->renderChildren());

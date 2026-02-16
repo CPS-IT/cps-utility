@@ -53,8 +53,7 @@ class DecodeViewHelper extends AbstractViewHelper
         );
         $this->registerArgument('name', 'string', 'Name of variable to create', false);
     }
-
-    #[\Override]
+    
     public function render(): mixed
     {
         $json = trim((string)$this->renderChildren());

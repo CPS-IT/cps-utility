@@ -42,7 +42,6 @@ class ProcessedMediaPropertiesViewHelper extends AbstractViewHelper implements V
      * @param RenderingContextInterface $renderingContext
      * @return int
      */
-    #[\Override]
     public function render()
     {
         $value = null;

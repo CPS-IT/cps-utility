@@ -43,7 +43,6 @@ class HeaderDataViewHelper extends AbstractViewHelper
      * @param \Closure $renderChildrenClosure
      * @param RenderingContextInterface $renderingContext
      */
-    #[\Override]
     public function render(): void
     {
         $pageRenderer = $this->pageRenderer;

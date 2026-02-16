@@ -84,6 +84,7 @@ class ArraySortByValueViewHelper extends AbstractViewHelper
      *
      * @throws \TYPO3Fluid\Fluid\Core\ViewHelper\Exception
      */
+    #[\Override]
     public function initializeArguments(): void
     {
         $this->registerArgument('subject', 'mixed', 'The array/Traversable instance to sort');
@@ -116,7 +117,6 @@ class ArraySortByValueViewHelper extends AbstractViewHelper
      *
      * @throws \Exception
      */
-    #[\Override]
     public function render(): ?array
     {
         $subject = $this->renderChildren();
