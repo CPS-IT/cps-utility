@@ -106,7 +106,7 @@ final class DateFormat
         $locale = $conf['locale'] ?? $this->resolveLocale($request);
 
         if ($pattern !== '') {
-            return new DateFormatter()->format($date, $format, $locale);
+            return (new DateFormatter())->format($date, $pattern, $locale);
         }
         return $date->format($format);
     }
@@ -143,7 +143,7 @@ final class DateFormat
                     1770973934
                 );
             }
-            return new \DateTime()->setTimestamp($dateTimestamp);
+            return (new \DateTime())->setTimestamp($dateTimestamp);
         }
         return $date;
 

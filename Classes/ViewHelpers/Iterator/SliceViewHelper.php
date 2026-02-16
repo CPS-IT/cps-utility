@@ -31,6 +31,7 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\Exception;
  */
 final class SliceViewHelper extends AbstractViewHelper
 {
+    #[\Override]
     public function initializeArguments(): void
     {
         $this->registerArgument('content', 'array', 'Input array');
@@ -67,7 +68,6 @@ final class SliceViewHelper extends AbstractViewHelper
         );
     }
 
-    #[\Override]
     public function render(): ?array
     {
         $content = $this->renderChildren();

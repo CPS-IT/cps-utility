@@ -27,6 +27,7 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
  */
 class ReplaceViewHelper extends AbstractViewHelper
 {
+    #[\Override]
     public function initializeArguments(): void
     {
         $this->registerArgument('content', 'string', 'Content in which to perform replacement');
@@ -36,7 +37,6 @@ class ReplaceViewHelper extends AbstractViewHelper
         $this->registerArgument('caseSensitive', 'boolean', 'If true, perform case-sensitive replacement', false, true);
     }
 
-    #[\Override]
     public function render(): string
     {
         $content = $this->renderChildren();
