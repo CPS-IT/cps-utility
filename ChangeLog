@@ -1,3 +1,6 @@
+2026-02-16         [RELEASE] Release of cps-utility 3.4.1 (Vladimir Falcón Piva)
+2026-02-16 bb05e5b [TASK] Fixes for PHP 8.3 regressions errors (Vladimir Falcón Piva)
+
 2026-02-13         [RELEASE] Release of cps-utility 3.4.0 (Vladimir Falcón Piva)
 2026-02-13 d6ab2c7 [FEATURE] Add DateFormat user function for locale-aware date formatting (Vladimir Falcón Piva)
 
