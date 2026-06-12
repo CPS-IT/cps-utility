@@ -143,7 +143,9 @@ final class ImportFixturesCommand extends Command
                 }
 
                 try {
-                    $connection->executeQuery($sql);
+                    foreach ($this->splitStatements($sql) as $statement) {
+                        $connection->executeStatement($statement);
+                    }
                     $this->io->writeln(sprintf('  Imported: %s', $filename));
                     $importedCount++;
                 } catch (\Exception $e) {
@@ -163,6 +165,23 @@ final class ImportFixturesCommand extends Command
         ));
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Splits a SQL file into individual executable statements.
+     * Strips single-line comments first so semicolons inside comments
+     * do not produce false statement boundaries.
+     *
+     * @return list<string>
+     */
+    private function splitStatements(string $sql): array
+    {
+        $stripped = (string)preg_replace('/--[^\n]*/m', '', $sql);
+
+        return array_values(array_filter(
+            array_map('trim', explode(';', $stripped)),
+            static fn(string $s): bool => $s !== ''
+        ));
     }
 
     private function resolveFixtureDirectory(string $basePath, string $contextKey): ?string
