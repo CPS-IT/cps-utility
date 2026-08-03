@@ -126,7 +126,9 @@ Only `--`-style line comments are stripped, via the regex `/--[^\n]*/m`. After t
 
 ## Execution Order & Fixture Dependencies
 
-_TODO: filled in by Task 4._
+The command does not explicitly sort fixture files itself. The order files are processed in is whatever `GeneralUtility::getFilesInDir($fixtureDirectory, 'sql')` returns — which is alphabetical in current TYPO3 versions, but is not a contract this command adds or guarantees on top of that core utility.
+
+**Practical implication:** if your fixtures have foreign-key dependencies on each other — for example, a categories table that must be populated before a table that references those category UIDs via a foreign key or MM-relation table — there is no explicit dependency-ordering mechanism. Rely on numeric or alphabetical filename prefixes to control import order, e.g. `01_categories.sql` before `02_category_assignments.sql`, since alphabetical filename order is the only ordering lever available.
 
 ## Behavior & Failure Semantics
 
@@ -138,7 +140,7 @@ _TODO: filled in by Task 5._
 
 ## Database Connection
 
-_TODO: filled in by Task 4._
+The command always executes fixture SQL against TYPO3's default Doctrine DBAL connection, obtained via `$this->connectionPool->getConnectionByName(ConnectionPool::DEFAULT_CONNECTION_NAME)`. There is no option to target an alternate or named database connection — if your TYPO3 installation is configured with multiple database connections, fixtures always run against the default one only. Plan fixture placement accordingly if your project relies on secondary connections for any of the tables you intend to seed.
 
 ## Troubleshooting
 
