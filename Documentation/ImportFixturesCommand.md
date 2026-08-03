@@ -132,11 +132,27 @@ The command does not explicitly sort fixture files itself. The order files are p
 
 ## Behavior & Failure Semantics
 
-_TODO: filled in by Task 5._
+Every exit path in the command, and its actual result:
+
+| Condition | Message shown | Exit code | Import performed? |
+|-----------|----------------|-----------|---------------------|
+| Context is exactly `Production`, `--production` not passed | Warning: "Fixture import is disabled in Production environment. Use --production to override." | `Command::SUCCESS` | No |
+| Base path resolution fails (e.g. bad `EXT:` key) | Error: "Cannot resolve fixture directory "...". For EXT: paths use the extension key (underscores, not hyphens) and ensure the extension is loaded." | `Command::FAILURE` | No |
+| Context not present in `CONTEXT_SUBDIRECTORY_MAP` | Info: "No fixture directory configured for context "...". Nothing to import." | `Command::SUCCESS` | No |
+| Resolved fixture directory does not exist on disk | Info: "Fixture directory "..." does not exist. Nothing to import." | `Command::SUCCESS` | No |
+| No `.sql` files found in the directory | Info: "No SQL fixture files found in "...". " | `Command::SUCCESS` | No |
+| A fixture file is unreadable or empty | Warning: "Skipping empty or unreadable file: ..." — file skipped, loop continues | `Command::SUCCESS` (at end) | Other files: yes; this file: no |
+| A SQL statement in a fixture file throws during execution | Error: "Failed to import "...": ..." — exception caught **per file**, skip-counter incremented, loop continues to the next file, **no rollback** of statements already applied from that same file | `Command::SUCCESS` (at end) | Other files: yes; this file: partially (whatever ran before the failing statement stays applied) |
+| `DbalException` while acquiring the database connection | Error: "Database connection error: ..." | `Command::FAILURE` | No — aborts before any file is processed |
+| Normal completion (all files processed, some may have been skipped) | Success: "Imported X fixture file(s). Skipped Y." | `Command::SUCCESS` | Yes, for however many files succeeded |
+
+> **The command effectively never returns `Command::FAILURE` due to bad fixture SQL.** Only a connection-acquisition failure (`DbalException`) or a base-path resolution failure (bad `EXT:` key) produce a non-zero exit code — every other failure mode, including a fixture file throwing mid-import, is swallowed into a `SUCCESS` exit with a printed skip count. **A CI/deploy pipeline that only checks the exit code will not detect that fixtures were silently partially or fully skipped.** If you rely on this command in an automated pipeline, also inspect its output for skip counts and per-file error lines — do not trust the exit status alone.
 
 ## Production Guard
 
-_TODO: filled in by Task 5._
+When the current context is exactly `Production`, the command prints a warning and does nothing (`Command::SUCCESS`, no import) unless the `--production`/`-p` flag is passed explicitly. This prevents accidental fixture imports against a live production database.
+
+**Scope clarification:** `--production` only gates the exact string context `Production`. The related contexts `Production/Preview` and `Production/Staging` always import into their `staging` fixture subdirectory **unconditionally, with no gate at all** — passing `-p` has no effect in those contexts because the guard check only compares against the literal string `Production`. Do not assume `-p` (or its absence) protects every production-like environment; it protects only the exact `Production` context.
 
 ## Database Connection
 
