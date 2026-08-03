@@ -20,7 +20,7 @@ With no flags, the command does three things automatically:
 
 1. Resolves the base fixtures directory to `Environment::getVarPath() . '/fixtures'` — i.e. `var/fixtures/` inside the TYPO3 installation, a non-public directory present in every standard TYPO3 project.
 2. Reads the current TYPO3 application context (e.g. `Development/Local`) and maps it to a subdirectory name (e.g. `Development/Local` → `dev`).
-3. Imports every `.sql` file found in `var/fixtures/<subdirectory>/`, in the order they are returned by the filesystem (see "Execution Order & Fixture Dependencies" below).
+3. Imports every `.sql` file found in `var/fixtures/<subdirectory>/`, alphabetically (see "Execution Order & Fixture Dependencies" below).
 
 For a typical local development setup this means dropping `.sql` files into `var/fixtures/dev/` and running the command above — no flags, no configuration. The rest of this document explains how to override the directory, what happens for other contexts, how to write fixtures safely, and exactly what the command does when something goes wrong.
 
@@ -43,7 +43,7 @@ cpsit:import-fixtures [options]
 
 ## How It Resolves Paths & Context
 
-Three resolution steps happen in sequence every time the command runs. Understanding them together explains both the default behavior from Quick Start and every `--directory` override.
+These are the resolution rules the command applies (the exact runtime order also involves an earlier Production-context check — see "Production Guard" below). Understanding them together explains both the default behavior from Quick Start and every `--directory` override.
 
 ### (a) Base path resolution
 
@@ -85,7 +85,7 @@ Each fixture file must be a valid SQL file. File names are not treated as table 
 
 ### Idempotency
 
-Fixtures should be safe to re-run without producing duplicate or conflicting data — for example after a database reset or on every `ddev start`. Use `INSERT ... ON DUPLICATE KEY UPDATE`, as this project's own `.ddev/fixtures/be_users.sql` does for its admin-user fixture:
+Fixtures should be safe to re-run without producing duplicate or conflicting data — for example after a database reset or on every `ddev start`. Use `INSERT ... ON DUPLICATE KEY UPDATE`, as this project's own `.ddev/fixtures/be_users.sql` does for its admin-user fixture (this and the other real fixture files cited in this document — e.g. `.ddev/fixtures/be_users.sql`, `.ddev/fixtures/service_center_level2_categories.sql`, `fixtures/staging/filefill.sql` — are drawn from one consuming project as real-world illustrations of the patterns described; the paths themselves are illustrative and are not part of this package):
 
 ```sql
 # Default admin user (password = AdminPassword!1)
@@ -121,8 +121,9 @@ Only `--`-style line comments are stripped, via the regex `/--[^\n]*/m`. After t
 - **`--` line comments are safe.** This repo's `.ddev/fixtures/service_center_level2_categories.sql` uses this style throughout (e.g. `-- Service Center: level-2 categories and their content assignments`) — they are stripped before splitting, so a `;` inside one of these comments would never corrupt statement boundaries.
 - **`#` line comments are NOT stripped.** `.ddev/fixtures/be_users.sql` opens with `# Default admin user (password = AdminPassword!1)`. This is currently safe only because that comment contains no `;` character. If a future edit added a `;` inside a `#` comment anywhere in a fixture file, `explode(';', ...)` would split the file in the middle of that comment, producing a malformed statement.
 - **`/* ... */` block comments are NOT stripped.** `fixtures/staging/filefill.sql` opens with a `/* ... */` block comment (`/*\n * Activate and configured file fill in stage System.\n */`). Again, this is currently safe only because it contains no `;`. A block comment spanning multiple lines with a `;` anywhere inside it would silently corrupt statement splitting for the rest of the file.
+- **A literal `;` inside any quoted SQL value also splits the statement incorrectly**, regardless of comment style — `explode(';', ...)` runs on the entire statement text with no awareness of quoting, so a semicolon inside a string literal (e.g. text content containing a semicolon) corrupts statement boundaries the same way a stray `;` in a comment does. Likewise, a `--` sequence occurring inside a string literal is still matched and stripped by the `/--[^\n]*/m` line-comment regex, since that regex has no awareness of quoting either, which could truncate a statement's value.
 
-**Practical rule:** prefer `--` line comments in fixture files if you want a comment to be guaranteed safe regardless of its contents. If you use `#` or `/* ... */` comments, never put a literal `;` inside them.
+**Practical rule:** prefer `--` line comments in fixture files — they are safe from the comment-vs-semicolon interaction that affects `#` and `/* ... */` comments, though not from every parsing edge case (see the quoting caveat above). If you use `#` or `/* ... */` comments, never put a literal `;` inside them, and in all cases avoid literal `;` or `--` inside quoted SQL values.
 
 ## Execution Order & Fixture Dependencies
 
@@ -191,6 +192,8 @@ Load from a project-relative path (useful in DDEV workflows):
 ```bash
 php vendor/bin/typo3 cpsit:import-fixtures --directory .ddev/fixtures
 ```
+
+Note that `--directory` only sets the *base* path — a context subdirectory (`dev`/`staging`/`production`) is still appended on top of whatever you pass, per "How It Resolves Paths & Context" above. Before reusing this example, make sure `<your-directory>/<context-subdir>/` (e.g. `.ddev/fixtures/dev/`) actually exists; otherwise the command silently reports "Nothing to import" and exits `Command::SUCCESS`.
 
 ### Using the DDEV wrapper
 
