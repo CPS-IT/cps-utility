@@ -81,7 +81,48 @@ The final fixture directory is `<base path>/<subdirectory>`, e.g. with the defau
 
 ## Writing Fixtures
 
-_TODO: filled in by Task 3._
+Each fixture file must be a valid SQL file. File names are not treated as table names; they are executed as-is, in whatever order `GeneralUtility::getFilesInDir()` returns them (see "Execution Order & Fixture Dependencies" below).
+
+### Idempotency
+
+Fixtures should be safe to re-run without producing duplicate or conflicting data — for example after a database reset or on every `ddev start`. Use `INSERT ... ON DUPLICATE KEY UPDATE`, as this project's own `.ddev/fixtures/be_users.sql` does for its admin-user fixture:
+
+```sql
+# Default admin user (password = AdminPassword!1)
+SET @username := 'admin';
+SET @password := '$argon2i$v=19$m=65536,t=16,p=1$dnFPM3F2Z2J1S3RFWW96Mw$bwkXqsGRdSu98m6BpFY7kTekyRDbhN0Dsd8Ib4cQGBY';
+
+INSERT INTO be_users (uid, username, password, admin)
+VALUES (1, @username, @password, 1)
+ON DUPLICATE KEY UPDATE username = @username,
+                                        password = @password;
+```
+
+Running this file any number of times leaves exactly one admin user with uid `1` and the expected credentials, rather than failing on a duplicate-key error or piling up duplicate rows.
+
+### Comment Syntax
+
+`splitStatements()` — the internal method that turns a fixture file's contents into individually-executed SQL statements — has a narrow, specific idea of "comment":
+
+```php
+private function splitStatements(string $sql): array
+{
+    $stripped = (string)preg_replace('/--[^\n]*/m', '', $sql);
+
+    return array_values(array_filter(
+        array_map('trim', explode(';', $stripped)),
+        static fn(string $s): bool => $s !== ''
+    ));
+}
+```
+
+Only `--`-style line comments are stripped, via the regex `/--[^\n]*/m`. After that single stripping pass, the remaining text is split naively on every literal `;` character. This means:
+
+- **`--` line comments are safe.** This repo's `.ddev/fixtures/service_center_level2_categories.sql` uses this style throughout (e.g. `-- Service Center: level-2 categories and their content assignments`) — they are stripped before splitting, so a `;` inside one of these comments would never corrupt statement boundaries.
+- **`#` line comments are NOT stripped.** `.ddev/fixtures/be_users.sql` opens with `# Default admin user (password = AdminPassword!1)`. This is currently safe only because that comment contains no `;` character. If a future edit added a `;` inside a `#` comment anywhere in a fixture file, `explode(';', ...)` would split the file in the middle of that comment, producing a malformed statement.
+- **`/* ... */` block comments are NOT stripped.** `fixtures/staging/filefill.sql` opens with a `/* ... */` block comment (`/*\n * Activate and configured file fill in stage System.\n */`). Again, this is currently safe only because it contains no `;`. A block comment spanning multiple lines with a `;` anywhere inside it would silently corrupt statement splitting for the rest of the file.
+
+**Practical rule:** prefer `--` line comments in fixture files if you want a comment to be guaranteed safe regardless of its contents. If you use `#` or `/* ... */` comments, never put a literal `;` inside them.
 
 ## Execution Order & Fixture Dependencies
 
