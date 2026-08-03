@@ -160,8 +160,47 @@ The command always executes fixture SQL against TYPO3's default Doctrine DBAL co
 
 ## Troubleshooting
 
-_TODO: filled in by Task 6._
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| Nothing was imported and no error was shown, when you expected the default `var/fixtures/<subdir>/` (or a `--directory`-supplied path) to be used | The resolved fixture directory does not exist on disk. The command prints an info message ("Fixture directory "..." does not exist. Nothing to import.") and returns `Command::SUCCESS` — it does **not** exit with an error. | Check the printed info message for the exact resolved path. For the default location, verify `var/fixtures/<subdir>/` exists relative to the project root. For `--directory`, confirm the path is correct and accessible to the web server / CLI user. For `EXT:` paths, ensure the extension is installed and the path inside it is correct. |
+| Nothing was imported and you're not sure why, and the current TYPO3 application context is unusual (e.g. a custom context) | The current context is not listed in `CONTEXT_SUBDIRECTORY_MAP`. An info message **is** printed — "No fixture directory configured for context "...". Nothing to import." — this is not a silent no-op. | Check the value of `TYPO3_CONTEXT` in your environment against the context-mapping table in "How It Resolves Paths & Context." Add a matching entry to `CONTEXT_SUBDIRECTORY_MAP` in the command source if you need a new context supported (this requires a code change, not a config change). |
+| A warning about the Production context appears and no import occurs | The current context is exactly `Production` and `--production`/`-p` was not passed. | Either switch to a non-production context, or pass `--production` if importing on a live system is genuinely intentional. Remember this guard only applies to the exact `Production` context — see "Production Guard." |
+| A fixture file's SQL produced an error but the command reported overall success | Each fixture file's SQL execution is wrapped in its own try/catch with no rollback and no propagation to the command's exit code — a per-file failure only increments the skip counter and logs an error line for that file, per "Behavior & Failure Semantics" above. | Do not trust the exit code alone. Check the printed "Failed to import "...": ..." error line and the final "Imported X fixture file(s). Skipped Y." summary for a nonzero skip count. Consider validating fixture SQL independently (e.g. a dry-run against a scratch database) in CI, since this command's exit code will not surface the failure. |
+| Command exits with `Command::FAILURE` | This is exclusively one of two causes: (1) a bad `EXT:` key passed to `--directory` that `GeneralUtility::getFileAbsFileName()` could not resolve, or (2) a `DbalException` thrown while acquiring the default database connection. | For (1), verify the extension key uses underscores (not hyphens) and that the extension is actually loaded/active. For (2), confirm database connectivity and credentials are correct and the default TYPO3 database connection is reachable. |
 
 ## Usage Examples
 
-_TODO: filled in by Task 6._
+### Default run
+
+Runs against `var/fixtures/<context-subdir>/` using the active application context:
+
+```bash
+php vendor/bin/typo3 cpsit:import-fixtures
+```
+
+### Override the fixtures directory
+
+Load fixtures from a custom directory inside a site package:
+
+```bash
+php vendor/bin/typo3 cpsit:import-fixtures --directory EXT:my_sitepackage/Resources/Private/Fixtures
+```
+
+Load from a project-relative path (useful in DDEV workflows):
+
+```bash
+php vendor/bin/typo3 cpsit:import-fixtures --directory .ddev/fixtures
+```
+
+### Using the DDEV wrapper
+
+```bash
+ddev cms cpsit:import-fixtures
+ddev cms cpsit:import-fixtures --directory .ddev/fixtures
+```
+
+### Force import in Production context
+
+```bash
+php vendor/bin/typo3 cpsit:import-fixtures --production
+```
