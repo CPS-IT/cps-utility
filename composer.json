@@ -8,7 +8,15 @@
     "typo3/cms-core": "^12.4 || ^13.4"
   },
   "require-dev": {
-    "roave/security-advisories": "dev-master"
+    "roave/security-advisories": "dev-master",
+    "typo3/testing-framework": "^8.3"
+  },
+  "config": {
+    "vendor-dir": ".Build/vendor",
+    "allow-plugins": {
+      "typo3/class-alias-loader": true,
+      "typo3/cms-composer-installers": true
+    }
   },
   "autoload": {
     "psr-4": {
@@ -31,10 +39,14 @@
       "[ -L .Build/Web/typo3conf/ext/cps_utility ] || ln -snvf ../../../../. .Build/Web/typo3conf/ext/cps_utility"
     ],
     "test": [
-      "@test:unit"
+      "@test:unit",
+      "@test:functional"
     ],
     "test:unit": [
       "phpunit -c Tests/Build/UnitTests.xml"
+    ],
+    "test:functional": [
+      "phpunit -c Tests/Build/FunctionalTests.xml"
     ]
   }
 }
