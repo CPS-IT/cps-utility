@@ -56,7 +56,7 @@ Given the `--directory`/`-d` value (or its absence), `resolveBasePath()` picks t
 | Starts with `/` | Used as-is (absolute path) |
 | Anything else | Treated as project-relative: `Environment::getProjectPath() . '/' . <value>` |
 
-For `EXT:` paths, use the extension key with underscores (not hyphens), e.g. `EXT:my_sitepackage/Resources/Private/Fixtures`, and ensure the extension is loaded — an unresolvable key is the one case in this whole command that produces `Command::FAILURE`.
+For `EXT:` paths, use the extension key with underscores (not hyphens), e.g. `EXT:my_sitepackage/Resources/Private/Fixtures`, and ensure the extension is loaded — an unresolvable key is one of two conditions in this command that produce `Command::FAILURE` (the other being a database connection error during import, covered in "Behavior & Failure Semantics" below).
 
 ### (b) Context resolution
 
