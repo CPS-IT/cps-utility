@@ -7,7 +7,8 @@ namespace Cpsit\CpsUtility\Tests\Functional\Command;
 use Cpsit\CpsUtility\Command\ImportFixturesCommand;
 use Cpsit\CpsUtility\Fixture\FixtureDirectoryResolver;
 use Cpsit\CpsUtility\Fixture\SqlStatementSplitter;
-use Doctrine\DBAL\Exception as DbalException;
+use Doctrine\DBAL\ConnectionException as DbalConnectionException;
+use Doctrine\DBAL\Result;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 use TYPO3\CMS\Core\Core\ApplicationContext;
@@ -163,14 +164,51 @@ final class ImportFixturesCommandTest extends FunctionalTestCase
     {
         $this->writeFixtureFile('dev', '01_admin.sql', "INSERT INTO be_users (uid, username) VALUES (9999, 'fixture_admin');");
 
-        // Doctrine\DBAL\Exception is an interface (not an instantiable
-        // class) in the doctrine/dbal version installed here, so a minimal
-        // anonymous class stands in for a genuine driver-level failure.
-        $dbalException = new class ('Simulated connection failure', 1234) extends \Exception implements DbalException {
-        };
+        // Doctrine\DBAL\ConnectionException is a concrete class (with a
+        // plain string-message constructor inherited from \Exception) in
+        // both doctrine/dbal ^3.9 (required by TYPO3 12.4, verified against
+        // the actual 3.9.5 source on GitHub) and doctrine/dbal 4.4.4
+        // (installed here, required by TYPO3 13.4) — unlike
+        // Doctrine\DBAL\Exception, which is an interface in DBAL 4 and
+        // therefore not instantiable directly.
+        $dbalException = new DbalConnectionException('Simulated connection failure', 1234);
 
         $failingConnection = $this->createMock(Connection::class);
         $failingConnection->method('executeQuery')->willThrowException($dbalException);
+
+        $connectionPool = $this->createMock(ConnectionPool::class);
+        $connectionPool->method('getConnectionByName')->willReturn($failingConnection);
+
+        $tester = $this->getCommandTester($connectionPool);
+        $exitCode = $tester->execute(['--directory' => $this->fixtureBasePath]);
+
+        self::assertSame(Command::FAILURE, $exitCode);
+        self::assertStringContainsString('Database connection error', $this->normalizedDisplay($tester));
+    }
+
+    public function testConnectionLostDuringImportPropagatesAsCommandFailure(): void
+    {
+        // Two files: the connection is only lost while importing the first
+        // one (from executeStatement(), i.e. mid-transaction, not from the
+        // pre-flight "SELECT 1" probe). This covers the scenario the
+        // pre-flight probe alone cannot: a connection that dies *during*
+        // the import loop (wait_timeout, DB restart, max_allowed_packet
+        // kill, ...) must still propagate as Command::FAILURE and must not
+        // be swallowed as a per-file "skipped" result.
+        $this->writeFixtureFile('dev', '01_admin.sql', "INSERT INTO be_users (uid, username) VALUES (9999, 'fixture_admin');");
+        $this->writeFixtureFile('dev', '02_admin.sql', "INSERT INTO be_users (uid, username) VALUES (9998, 'second_admin');");
+
+        $dbalException = new DbalConnectionException('Simulated connection loss', 2006);
+
+        $failingConnection = $this->createMock(Connection::class);
+        // The eager pre-flight probe succeeds...
+        $failingConnection->method('executeQuery')->willReturn($this->createStub(Result::class));
+        // ...but the connection is reported lost once inside the per-file
+        // transaction, and is no longer active by the time the command's
+        // catch block runs — exercising the guarded rollBack() path added
+        // for this scenario.
+        $failingConnection->method('executeStatement')->willThrowException($dbalException);
+        $failingConnection->method('isTransactionActive')->willReturn(false);
 
         $connectionPool = $this->createMock(ConnectionPool::class);
         $connectionPool->method('getConnectionByName')->willReturn($failingConnection);
