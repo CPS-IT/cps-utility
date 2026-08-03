@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Cpsit\CpsUtility\Command;
 
+use Cpsit\CpsUtility\Fixture\FixtureDirectoryResolver;
+use Cpsit\CpsUtility\Fixture\SqlStatementSplitter;
 use Doctrine\DBAL\Exception as DbalException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -22,23 +24,12 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 )]
 final class ImportFixturesCommand extends Command
 {
-    /**
-     * Maps TYPO3 application contexts to fixture subdirectory names.
-     * Only contexts listed here will trigger a fixture import.
-     */
-    public const array CONTEXT_SUBDIRECTORY_MAP = [
-        'Production' => 'production',
-        'Production/Preview' => 'staging',
-        'Production/Staging' => 'staging',
-        'Development' => 'dev',
-        'Development/Local' => 'dev',
-        'Testing' => 'dev',
-    ];
-
     private SymfonyStyle $io;
 
     public function __construct(
-        private readonly ConnectionPool $connectionPool
+        private readonly FixtureDirectoryResolver $directoryResolver,
+        private readonly SqlStatementSplitter $statementSplitter,
+        private readonly ConnectionPool $connectionPool,
     ) {
         parent::__construct();
     }
@@ -55,7 +46,8 @@ final class ImportFixturesCommand extends Command
                 . '  Production         → {base}/production/' . PHP_EOL
                 . PHP_EOL
                 . 'Default base path: var/fixtures/ (never publicly accessible).' . PHP_EOL
-                . 'Override with --directory, which accepts absolute paths or EXT: notation.'
+                . 'Override with --directory, which accepts absolute paths or EXT: notation.' . PHP_EOL
+                . 'Use --dry-run to list files and statement counts without executing anything.'
             )
             ->addOption(
                 'directory',
@@ -68,6 +60,12 @@ final class ImportFixturesCommand extends Command
                 'p',
                 InputOption::VALUE_NONE,
                 'Allow fixture import in Production environment. Required when context is "Production".'
+            )
+            ->addOption(
+                'dry-run',
+                null,
+                InputOption::VALUE_NONE,
+                'List fixture files and statement counts without executing anything.'
             );
     }
 
@@ -81,7 +79,15 @@ final class ImportFixturesCommand extends Command
         $applicationContext = Environment::getContext();
         $contextKey = $applicationContext->__toString();
         $forceProduction = (bool)$input->getOption('production');
+        $dryRun = (bool)$input->getOption('dry-run');
 
+        // Guard: only the exact "Production" context is blocked without
+        // --production. "Production/Preview" and "Production/Staging" are
+        // intentionally left unguarded so staging/preview environments can
+        // auto-seed their fixture set without any deploy-script changes.
+        // This is a deliberate, reviewed design decision — see
+        // Documentation/ImportFixturesCommand.md, "Production Guard" — not
+        // an oversight. Do not widen this check to cover Production/* contexts.
         if ($contextKey === 'Production') {
             if (!$forceProduction) {
                 $this->io->warning('Fixture import is disabled in Production environment. Use --production to override.');
@@ -91,18 +97,19 @@ final class ImportFixturesCommand extends Command
         }
 
         $directoryOption = $input->getOption('directory');
-        $basePath = $this->resolveBasePath($directoryOption);
+        $basePath = $this->directoryResolver->resolveBasePath($directoryOption);
 
         if ($basePath === null) {
             $this->io->error(sprintf(
                 'Cannot resolve fixture directory "%s". '
-                . 'For EXT: paths use the extension key (underscores, not hyphens) and ensure the extension is loaded.',
+                . 'For EXT: paths use the extension key (underscores, not hyphens) and ensure the extension is loaded. '
+                . 'For project-relative paths, ensure the path does not escape the project root.',
                 $directoryOption
             ));
             return Command::FAILURE;
         }
 
-        $fixtureDirectory = $this->resolveFixtureDirectory($basePath, $contextKey);
+        $fixtureDirectory = $this->directoryResolver->resolveFixtureDirectory($basePath, $applicationContext);
 
         if ($fixtureDirectory === null) {
             $this->io->info(sprintf(
@@ -124,38 +131,92 @@ final class ImportFixturesCommand extends Command
             return Command::SUCCESS;
         }
 
+        // Own the ordering contract explicitly instead of relying on
+        // scandir()'s incidental default order (GeneralUtility::getFilesInDir()
+        // returns an array keyed by md5 hash; sort() re-indexes numerically
+        // and sorts the filenames themselves).
+        sort($fixtureFiles);
+
+        if ($dryRun) {
+            return $this->executeDryRun($fixtureDirectory, $fixtureFiles);
+        }
+
+        return $this->executeImport($fixtureDirectory, $fixtureFiles);
+    }
+
+    /**
+     * @param list<string> $fixtureFiles
+     */
+    private function executeDryRun(string $fixtureDirectory, array $fixtureFiles): int
+    {
+        $this->io->info(sprintf(
+            'Dry run: %d fixture file(s) found in "%s". Nothing will be imported.',
+            count($fixtureFiles),
+            $fixtureDirectory
+        ));
+
+        foreach ($fixtureFiles as $filename) {
+            $filePath = $fixtureDirectory . '/' . $filename;
+            $sql = file_get_contents($filePath);
+
+            if ($sql === false || $sql === '') {
+                $this->io->writeln(sprintf('  %s: unreadable or empty, would be skipped', $filename));
+                continue;
+            }
+
+            $statementCount = count($this->statementSplitter->split($sql));
+            $this->io->writeln(sprintf('  %s: %d statement(s)', $filename, $statementCount));
+        }
+
+        return Command::SUCCESS;
+    }
+
+    /**
+     * @param list<string> $fixtureFiles
+     */
+    private function executeImport(string $fixtureDirectory, array $fixtureFiles): int
+    {
         $this->io->info(sprintf('Importing %d fixture file(s) from "%s"', count($fixtureFiles), $fixtureDirectory));
+
+        try {
+            $connection = $this->connectionPool->getConnectionByName(ConnectionPool::DEFAULT_CONNECTION_NAME);
+            // Force an eager connectivity check here, outside the per-file
+            // loop below, so a genuine database outage propagates to
+            // Command::FAILURE instead of being swallowed by the per-file
+            // catch (which is only meant to catch bad fixture SQL, not a
+            // dead connection).
+            $connection->executeQuery('SELECT 1');
+        } catch (DbalException $e) {
+            $this->io->error('Database connection error: ' . $e->getMessage());
+            return Command::FAILURE;
+        }
 
         $importedCount = 0;
         $skippedCount = 0;
 
-        try {
-            $connection = $this->connectionPool->getConnectionByName(ConnectionPool::DEFAULT_CONNECTION_NAME);
+        foreach ($fixtureFiles as $filename) {
+            $filePath = $fixtureDirectory . '/' . $filename;
+            $sql = file_get_contents($filePath);
 
-            foreach ($fixtureFiles as $filename) {
-                $filePath = $fixtureDirectory . '/' . $filename;
-                $sql = file_get_contents($filePath);
-
-                if ($sql === false || $sql === '') {
-                    $this->io->warning(sprintf('Skipping empty or unreadable file: %s', $filename));
-                    $skippedCount++;
-                    continue;
-                }
-
-                try {
-                    foreach ($this->splitStatements($sql) as $statement) {
-                        $connection->executeStatement($statement);
-                    }
-                    $this->io->writeln(sprintf('  Imported: %s', $filename));
-                    $importedCount++;
-                } catch (\Exception $e) {
-                    $this->io->error(sprintf('Failed to import "%s": %s', $filename, $e->getMessage()));
-                    $skippedCount++;
-                }
+            if ($sql === false || $sql === '') {
+                $this->io->warning(sprintf('Skipping empty or unreadable file: %s', $filename));
+                $skippedCount++;
+                continue;
             }
-        } catch (DbalException $e) {
-            $this->io->error('Database connection error: ' . $e->getMessage());
-            return Command::FAILURE;
+
+            try {
+                $connection->beginTransaction();
+                foreach ($this->statementSplitter->split($sql) as $statement) {
+                    $connection->executeStatement($statement);
+                }
+                $connection->commit();
+                $this->io->writeln(sprintf('  Imported: %s', $filename));
+                $importedCount++;
+            } catch (\Throwable $e) {
+                $connection->rollBack();
+                $this->io->error(sprintf('Failed to import "%s": %s', $filename, $e->getMessage()));
+                $skippedCount++;
+            }
         }
 
         $this->io->success(sprintf(
@@ -165,49 +226,5 @@ final class ImportFixturesCommand extends Command
         ));
 
         return Command::SUCCESS;
-    }
-
-    /**
-     * Splits a SQL file into individual executable statements.
-     * Strips single-line comments first so semicolons inside comments
-     * do not produce false statement boundaries.
-     *
-     * @return list<string>
-     */
-    private function splitStatements(string $sql): array
-    {
-        $stripped = (string)preg_replace('/--[^\n]*/m', '', $sql);
-
-        return array_values(array_filter(
-            array_map('trim', explode(';', $stripped)),
-            static fn(string $s): bool => $s !== ''
-        ));
-    }
-
-    private function resolveFixtureDirectory(string $basePath, string $contextKey): ?string
-    {
-        if (!isset(self::CONTEXT_SUBDIRECTORY_MAP[$contextKey])) {
-            return null;
-        }
-
-        return rtrim($basePath, '/') . '/' . self::CONTEXT_SUBDIRECTORY_MAP[$contextKey];
-    }
-
-    private function resolveBasePath(?string $directoryOption): ?string
-    {
-        if ($directoryOption === null) {
-            return Environment::getVarPath() . '/fixtures';
-        }
-
-        if (str_starts_with($directoryOption, 'EXT:')) {
-            $resolved = GeneralUtility::getFileAbsFileName($directoryOption);
-            return $resolved !== '' ? rtrim($resolved, '/') : null;
-        }
-
-        if (str_starts_with($directoryOption, '/')) {
-            return $directoryOption;
-        }
-
-        return Environment::getProjectPath() . '/' . ltrim($directoryOption, '/');
     }
 }
