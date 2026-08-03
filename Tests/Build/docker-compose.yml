@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   web:
-    image: webdevops/php-dev:7.4
+    image: webdevops/php-dev:8.3
     depends_on:
       - db
     volumes:
@@ -20,7 +20,7 @@ services:
       #typo3DatabaseUsername: root
       #typo3DatabasePassword: joh316
   db:
-    image: mysql:5
+    image: mysql:8.0
     environment:
       MYSQL_DATABASE: typo3
       MYSQL_ROOT_PASSWORD: joh316
