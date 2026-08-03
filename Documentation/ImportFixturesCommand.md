@@ -43,7 +43,41 @@ cpsit:import-fixtures [options]
 
 ## How It Resolves Paths & Context
 
-_TODO: filled in by Task 2._
+Three resolution steps happen in sequence every time the command runs. Understanding them together explains both the default behavior from Quick Start and every `--directory` override.
+
+### (a) Base path resolution
+
+Given the `--directory`/`-d` value (or its absence), `resolveBasePath()` picks the base fixtures directory using these rules, in this order:
+
+| `--directory` value | Resolution |
+|----------------------|------------|
+| Not given (omitted) | `Environment::getVarPath() . '/fixtures'` — i.e. `var/fixtures/` |
+| Starts with `EXT:` | Resolved via `GeneralUtility::getFileAbsFileName()`. An empty result here (e.g. unknown extension key) is a genuine error — see "Behavior & Failure Semantics" below. |
+| Starts with `/` | Used as-is (absolute path) |
+| Anything else | Treated as project-relative: `Environment::getProjectPath() . '/' . <value>` |
+
+For `EXT:` paths, use the extension key with underscores (not hyphens), e.g. `EXT:my_sitepackage/Resources/Private/Fixtures`, and ensure the extension is loaded — an unresolvable key is the one case in this whole command that produces `Command::FAILURE`.
+
+### (b) Context resolution
+
+The command reads the current TYPO3 application context via `Environment::getContext()` and converts it to its string form (e.g. `Development/Local`, `Production`, `Testing`).
+
+### (c) Subdirectory resolution
+
+The context string is looked up in `CONTEXT_SUBDIRECTORY_MAP`:
+
+| TYPO3 Application Context | Subdirectory used |
+|---------------------------|--------------------|
+| `Production` | `production` |
+| `Production/Preview` | `staging` |
+| `Production/Staging` | `staging` |
+| `Development` | `dev` |
+| `Development/Local` | `dev` |
+| `Testing` | `dev` |
+
+The final fixture directory is `<base path>/<subdirectory>`, e.g. with the default base path and context `Development/Local`, that resolves to `var/fixtures/dev/`.
+
+**Important correction:** a context that is *not* listed in this table does **not** silently exit with no output. The command prints an info message — `No fixture directory configured for context "<context>". Nothing to import.` — and returns `Command::SUCCESS` with nothing imported. If you add a new custom application context, you will see this message rather than no feedback at all.
 
 ## Writing Fixtures
 
