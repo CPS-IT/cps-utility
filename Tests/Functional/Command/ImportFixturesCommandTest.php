@@ -8,6 +8,9 @@ use Cpsit\CpsUtility\Command\ImportFixturesCommand;
 use Cpsit\CpsUtility\Fixture\FixtureDirectoryResolver;
 use Cpsit\CpsUtility\Fixture\SqlStatementSplitter;
 use Doctrine\DBAL\ConnectionException as DbalConnectionException;
+use Doctrine\DBAL\Driver\Exception as DbalDriverException;
+use Doctrine\DBAL\Exception\ConnectionException as DbalDriverConnectionException;
+use Doctrine\DBAL\Exception\ConnectionLost as DbalConnectionLost;
 use Doctrine\DBAL\Result;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -100,6 +103,25 @@ final class ImportFixturesCommandTest extends FunctionalTestCase
         return (string)preg_replace('/\s+/', ' ', $tester->getDisplay());
     }
 
+    /**
+     * Doctrine\DBAL\Exception\ConnectionException and its subclass
+     * Doctrine\DBAL\Exception\ConnectionLost (what real per-platform
+     * ExceptionConverters actually throw for driver-detected connection
+     * failures) both inherit DriverException's constructor, which requires
+     * a wrapped Doctrine\DBAL\Driver\Exception rather than accepting a
+     * plain message string directly. This builds a minimal one so the
+     * namespaced exceptions can be constructed realistically in tests.
+     */
+    private function createDriverException(string $message, int $code): DbalDriverException
+    {
+        return new class ($message, $code) extends \Exception implements DbalDriverException {
+            public function getSQLState(): ?string
+            {
+                return null;
+            }
+        };
+    }
+
     public function testHappyPathImportsFixtureFile(): void
     {
         $this->writeFixtureFile('dev', '01_admin.sql', "INSERT INTO be_users (uid, username) VALUES (9999, 'fixture_admin');");
@@ -186,19 +208,64 @@ final class ImportFixturesCommandTest extends FunctionalTestCase
         self::assertStringContainsString('Database connection error', $this->normalizedDisplay($tester));
     }
 
-    public function testConnectionLostDuringImportPropagatesAsCommandFailure(): void
+    public function testConnectionRefusedDuringImportPropagatesAsCommandFailure(): void
     {
-        // Two files: the connection is only lost while importing the first
-        // one (from executeStatement(), i.e. mid-transaction, not from the
+        // Two files: the connection fails while importing the first one
+        // (from executeStatement(), i.e. mid-transaction, not from the
         // pre-flight "SELECT 1" probe). This covers the scenario the
-        // pre-flight probe alone cannot: a connection that dies *during*
-        // the import loop (wait_timeout, DB restart, max_allowed_packet
-        // kill, ...) must still propagate as Command::FAILURE and must not
-        // be swallowed as a per-file "skipped" result.
+        // pre-flight probe alone cannot: a connection that fails *during*
+        // the import loop must still propagate as Command::FAILURE and
+        // must not be swallowed as a per-file "skipped" result.
+        //
+        // Throws the actual class MySQL's ExceptionConverter produces for
+        // access-denied/unknown-database/can't-connect/unknown-host (codes
+        // 1044, 1045, 1046, 1049, 2002, 2005, ... — see
+        // Driver/API/MySQL/ExceptionConverter.php): the *namespaced*
+        // Doctrine\DBAL\Exception\ConnectionException, not the unrelated
+        // top-level Doctrine\DBAL\ConnectionException used elsewhere in
+        // this file for API-misuse errors. This is arguably the more
+        // common real-world connection failure (vs. a mid-query "gone
+        // away"), and is exactly the class the command's discriminator
+        // must match.
         $this->writeFixtureFile('dev', '01_admin.sql', "INSERT INTO be_users (uid, username) VALUES (9999, 'fixture_admin');");
         $this->writeFixtureFile('dev', '02_admin.sql', "INSERT INTO be_users (uid, username) VALUES (9998, 'second_admin');");
 
-        $dbalException = new DbalConnectionException('Simulated connection loss', 2006);
+        $dbalException = new DbalDriverConnectionException($this->createDriverException("Access denied for user 'db'@'db'", 1045), null);
+
+        $failingConnection = $this->createMock(Connection::class);
+        // The eager pre-flight probe succeeds...
+        $failingConnection->method('executeQuery')->willReturn($this->createStub(Result::class));
+        // ...but the connection fails once inside the per-file transaction.
+        $failingConnection->method('executeStatement')->willThrowException($dbalException);
+        $failingConnection->method('isTransactionActive')->willReturn(true);
+
+        $connectionPool = $this->createMock(ConnectionPool::class);
+        $connectionPool->method('getConnectionByName')->willReturn($failingConnection);
+
+        $tester = $this->getCommandTester($connectionPool);
+        $exitCode = $tester->execute(['--directory' => $this->fixtureBasePath]);
+
+        self::assertSame(Command::FAILURE, $exitCode);
+        self::assertStringContainsString('Database connection error', $this->normalizedDisplay($tester));
+    }
+
+    public function testConnectionLostDuringImportPropagatesAsCommandFailure(): void
+    {
+        // Same shape as testConnectionRefusedDuringImportPropagatesAsCommandFailure,
+        // but for the "server has gone away" / connection-reset case (MySQL
+        // codes 2006, 4031), which MySQL's ExceptionConverter maps to
+        // Doctrine\DBAL\Exception\ConnectionLost — a subclass of the
+        // namespaced ConnectionException checked above. DBAL's
+        // handleDriverException() calls $connection->close() specifically
+        // for ConnectionLost, which resets the internal transaction nesting
+        // level to 0; isTransactionActive() is stubbed to false here to
+        // simulate exactly that post-close() state and exercise the
+        // guarded-rollback branch (unconditionally calling rollBack() in
+        // that state would itself throw NoActiveTransaction).
+        $this->writeFixtureFile('dev', '01_admin.sql', "INSERT INTO be_users (uid, username) VALUES (9999, 'fixture_admin');");
+        $this->writeFixtureFile('dev', '02_admin.sql', "INSERT INTO be_users (uid, username) VALUES (9998, 'second_admin');");
+
+        $dbalException = new DbalConnectionLost($this->createDriverException('MySQL server has gone away', 2006), null);
 
         $failingConnection = $this->createMock(Connection::class);
         // The eager pre-flight probe succeeds...
