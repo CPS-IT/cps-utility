@@ -137,6 +137,14 @@ The command resolves a context-specific subdirectory (`dev/`, `staging/`, or `pr
 
 [Documentation](Documentation/ImportFixturesCommand.md)
 
+## Development
+
+### Running Tests
+
+This package has Unit and Functional PHPUnit test suites, including how to run the functional suite against SQLite (fast, no DB server) or against a real MySQL server via Docker Compose.
+
+[Documentation](Documentation/Testing.md)
+
 ## CKEditor Plugins
 
 ### CkContent Plugin
