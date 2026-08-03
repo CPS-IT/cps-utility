@@ -156,6 +156,45 @@ final class ImportFixturesCommandTest extends FunctionalTestCase
         self::assertStringContainsString('No SQL fixture files found', $this->normalizedDisplay($tester));
     }
 
+    public function testUnreadableFixtureDirectoryReturnsCommandFailure(): void
+    {
+        // GeneralUtility::getFilesInDir() is declared array|string: on a
+        // scandir() failure it returns an error string instead of an
+        // array, which would previously reach an unguarded sort() call and
+        // throw an uncaught TypeError. A directory that passes is_dir()
+        // but has no read/execute permission for the current process
+        // reproduces this for real (verified directly against this
+        // environment's PHP/filesystem before writing this test — chmod
+        // 000 on a directory leaves is_dir() true but makes scandir() fail
+        // with "Permission denied"). That underlying scandir() call is
+        // TYPO3 core code (GeneralUtility::getFilesInDir(), not ours) and
+        // is not error-suppressed there, so this test is expected to
+        // surface two benign PHP warnings ("Failed to open directory:
+        // Permission denied" / "errno 0: Success") alongside a passing
+        // result — that is core faithfully reporting the exact failure
+        // this test deliberately induces, not a defect.
+        if (function_exists('posix_getuid') && posix_getuid() === 0) {
+            self::markTestSkipped('Running as root bypasses filesystem permission checks, so this scenario cannot be reproduced.');
+        }
+
+        $unreadableDirectory = $this->fixtureBasePath . '/dev';
+
+        try {
+            chmod($unreadableDirectory, 0000);
+
+            $tester = $this->getCommandTester();
+            $exitCode = $tester->execute(['--directory' => $this->fixtureBasePath]);
+
+            self::assertSame(Command::FAILURE, $exitCode);
+            self::assertStringContainsString('Cannot read fixture directory', $this->normalizedDisplay($tester));
+        } finally {
+            // Restore permissions before tearDown()'s recursive rmdir(),
+            // which would otherwise be unable to remove/traverse this
+            // directory.
+            chmod($unreadableDirectory, 0755);
+        }
+    }
+
     public function testFailingFileIsFullyRolledBackAndOtherFilesStillImport(): void
     {
         $this->writeFixtureFile('dev', '01_good.sql', "INSERT INTO be_users (uid, username) VALUES (9001, 'good_admin');");
@@ -210,34 +249,29 @@ final class ImportFixturesCommandTest extends FunctionalTestCase
 
     public function testConnectionRefusedDuringImportPropagatesAsCommandFailure(): void
     {
-        // Two files: the connection fails while importing the first one
-        // (from executeStatement(), i.e. mid-transaction, not from the
-        // pre-flight "SELECT 1" probe). This covers the scenario the
-        // pre-flight probe alone cannot: a connection that fails *during*
-        // the import loop must still propagate as Command::FAILURE and
-        // must not be swallowed as a per-file "skipped" result.
-        //
-        // Throws the actual class MySQL's ExceptionConverter produces for
-        // access-denied/unknown-database/can't-connect/unknown-host (codes
-        // 1044, 1045, 1046, 1049, 2002, 2005, ... — see
-        // Driver/API/MySQL/ExceptionConverter.php): the *namespaced*
-        // Doctrine\DBAL\Exception\ConnectionException, not the unrelated
-        // top-level Doctrine\DBAL\ConnectionException used elsewhere in
-        // this file for API-misuse errors. This is arguably the more
-        // common real-world connection failure (vs. a mid-query "gone
-        // away"), and is exactly the class the command's discriminator
-        // must match.
+        // The connection-liveness re-probe (added because DBAL's exception
+        // taxonomy for classifying "dead connection vs. per-statement SQL
+        // error" proved unreliable across DBAL major versions — see
+        // testPrivilegeErrorDuringImportIsSkippedNotTreatedAsConnectionFailure()
+        // below for the case that motivated dropping class-based
+        // discrimination entirely) means this mock must make *every*
+        // executeQuery() call fail, not just the first one: a genuinely
+        // dead connection would fail the pre-flight probe AND any
+        // subsequent re-probe identically. That makes this scenario
+        // indistinguishable, by design, from testConnectionFailurePropagatesAsCommandFailure()
+        // (both hit the pre-flight probe's outer catch) — kept as a
+        // separate test because it documents a different real-world root
+        // cause (access denied / can't connect, the namespaced
+        // Doctrine\DBAL\Exception\ConnectionException that MySQL's
+        // ExceptionConverter actually throws for codes 1044/1045/1046/1049/
+        // 2002/2005, as opposed to the generic exception used in the other
+        // test) still results in the same Command::FAILURE outcome.
         $this->writeFixtureFile('dev', '01_admin.sql', "INSERT INTO be_users (uid, username) VALUES (9999, 'fixture_admin');");
-        $this->writeFixtureFile('dev', '02_admin.sql', "INSERT INTO be_users (uid, username) VALUES (9998, 'second_admin');");
 
         $dbalException = new DbalDriverConnectionException($this->createDriverException("Access denied for user 'db'@'db'", 1045), null);
 
         $failingConnection = $this->createMock(Connection::class);
-        // The eager pre-flight probe succeeds...
-        $failingConnection->method('executeQuery')->willReturn($this->createStub(Result::class));
-        // ...but the connection fails once inside the per-file transaction.
-        $failingConnection->method('executeStatement')->willThrowException($dbalException);
-        $failingConnection->method('isTransactionActive')->willReturn(true);
+        $failingConnection->method('executeQuery')->willThrowException($dbalException);
 
         $connectionPool = $this->createMock(ConnectionPool::class);
         $connectionPool->method('getConnectionByName')->willReturn($failingConnection);
@@ -251,31 +285,23 @@ final class ImportFixturesCommandTest extends FunctionalTestCase
 
     public function testConnectionLostDuringImportPropagatesAsCommandFailure(): void
     {
-        // Same shape as testConnectionRefusedDuringImportPropagatesAsCommandFailure,
-        // but for the "server has gone away" / connection-reset case (MySQL
-        // codes 2006, 4031), which MySQL's ExceptionConverter maps to
-        // Doctrine\DBAL\Exception\ConnectionLost — a subclass of the
-        // namespaced ConnectionException checked above. DBAL's
-        // handleDriverException() calls $connection->close() specifically
-        // for ConnectionLost, which resets the internal transaction nesting
-        // level to 0; isTransactionActive() is stubbed to false here to
-        // simulate exactly that post-close() state and exercise the
-        // guarded-rollback branch (unconditionally calling rollBack() in
-        // that state would itself throw NoActiveTransaction).
+        // Same rationale as testConnectionRefusedDuringImportPropagatesAsCommandFailure():
+        // every executeQuery() call must fail for this to realistically
+        // represent a connection that is actually gone, which — with the
+        // liveness re-probe — means it is indistinguishable from a
+        // pre-flight failure. See
+        // testConnectionDiesMidImportAfterHealthyPreflightPropagatesAsCommandFailure()
+        // below for a test that specifically exercises the mid-loop
+        // re-probe path (pre-flight succeeds, then the connection dies).
+        // Kept as a separate test because it documents the "server has
+        // gone away" / connection-reset root cause specifically (MySQL
+        // codes 2006, 4031 → Doctrine\DBAL\Exception\ConnectionLost).
         $this->writeFixtureFile('dev', '01_admin.sql', "INSERT INTO be_users (uid, username) VALUES (9999, 'fixture_admin');");
-        $this->writeFixtureFile('dev', '02_admin.sql', "INSERT INTO be_users (uid, username) VALUES (9998, 'second_admin');");
 
         $dbalException = new DbalConnectionLost($this->createDriverException('MySQL server has gone away', 2006), null);
 
         $failingConnection = $this->createMock(Connection::class);
-        // The eager pre-flight probe succeeds...
-        $failingConnection->method('executeQuery')->willReturn($this->createStub(Result::class));
-        // ...but the connection is reported lost once inside the per-file
-        // transaction, and is no longer active by the time the command's
-        // catch block runs — exercising the guarded rollBack() path added
-        // for this scenario.
-        $failingConnection->method('executeStatement')->willThrowException($dbalException);
-        $failingConnection->method('isTransactionActive')->willReturn(false);
+        $failingConnection->method('executeQuery')->willThrowException($dbalException);
 
         $connectionPool = $this->createMock(ConnectionPool::class);
         $connectionPool->method('getConnectionByName')->willReturn($failingConnection);
@@ -285,6 +311,128 @@ final class ImportFixturesCommandTest extends FunctionalTestCase
 
         self::assertSame(Command::FAILURE, $exitCode);
         self::assertStringContainsString('Database connection error', $this->normalizedDisplay($tester));
+    }
+
+    public function testConnectionDiesMidImportAfterHealthyPreflightPropagatesAsCommandFailure(): void
+    {
+        // Specifically exercises the NEW mid-loop re-probe path introduced
+        // by the liveness-check fix: the pre-flight "SELECT 1" probe
+        // succeeds (so the loop is entered), but the connection is gone by
+        // the time the first file's executeStatement() runs, and the
+        // catch block's own re-probe correctly detects that and fails hard
+        // — producing the distinct "Database connection lost during
+        // import" message (as opposed to the pre-flight probe's "Database
+        // connection error" message used by the two tests above).
+        $this->writeFixtureFile('dev', '01_admin.sql', "INSERT INTO be_users (uid, username) VALUES (9999, 'fixture_admin');");
+        $this->writeFixtureFile('dev', '02_admin.sql', "INSERT INTO be_users (uid, username) VALUES (9998, 'second_admin');");
+
+        $dbalException = new DbalConnectionLost($this->createDriverException('MySQL server has gone away', 2006), null);
+
+        $executeQueryCallCount = 0;
+        $failingConnection = $this->createMock(Connection::class);
+        $failingConnection->method('executeQuery')->willReturnCallback(
+            function () use (&$executeQueryCallCount, $dbalException): Result {
+                $executeQueryCallCount++;
+                if ($executeQueryCallCount === 1) {
+                    // The pre-flight probe: connection is still healthy.
+                    return $this->createStub(Result::class);
+                }
+
+                // Every re-probe from here on: the connection has died.
+                throw $dbalException;
+            }
+        );
+        $failingConnection->method('executeStatement')->willThrowException($dbalException);
+
+        $connectionPool = $this->createMock(ConnectionPool::class);
+        $connectionPool->method('getConnectionByName')->willReturn($failingConnection);
+
+        $tester = $this->getCommandTester($connectionPool);
+        $exitCode = $tester->execute(['--directory' => $this->fixtureBasePath]);
+
+        self::assertSame(Command::FAILURE, $exitCode);
+        self::assertStringContainsString('Database connection lost during import', $this->normalizedDisplay($tester));
+    }
+
+    public function testRollbackFailureDuringImportPropagatesAsCommandFailureWithCleanMessage(): void
+    {
+        // Exercises the other new branch from the same fix: the connection
+        // is genuinely fine (the re-probe succeeds) and a transaction is
+        // active, but rollBack() itself throws (e.g. the connection drops
+        // in the narrow window between the re-probe and the rollback
+        // call). Before this fix, that would escape the catch block
+        // entirely as an unhandled exception; now it must produce a clean
+        // Command::FAILURE with a distinct "Rollback failed" message.
+        $this->writeFixtureFile('dev', '01_admin.sql', "INSERT INTO be_users (uid, username) VALUES (9999, 'fixture_admin');");
+
+        $failingConnection = $this->createMock(Connection::class);
+        $failingConnection->method('executeQuery')->willReturn($this->createStub(Result::class));
+        $failingConnection->method('executeStatement')->willThrowException(new \RuntimeException('Simulated bad statement'));
+        $failingConnection->method('isTransactionActive')->willReturn(true);
+        $failingConnection->method('rollBack')->willThrowException(new \RuntimeException('Simulated rollback failure'));
+
+        $connectionPool = $this->createMock(ConnectionPool::class);
+        $connectionPool->method('getConnectionByName')->willReturn($failingConnection);
+
+        $tester = $this->getCommandTester($connectionPool);
+        $exitCode = $tester->execute(['--directory' => $this->fixtureBasePath]);
+
+        self::assertSame(Command::FAILURE, $exitCode);
+        self::assertStringContainsString('Rollback failed for "01_admin.sql": Simulated rollback failure', $this->normalizedDisplay($tester));
+    }
+
+    public function testPrivilegeErrorDuringImportIsSkippedNotTreatedAsConnectionFailure(): void
+    {
+        // The scenario the whole re-probe fix exists for: a per-statement
+        // GRANT/privilege error (MySQL 1142 "command denied to user ... for
+        // table X", 1143 column access denied) on an otherwise perfectly
+        // healthy connection. Notably, DBAL's own MySQL ExceptionConverter
+        // wraps codes 1142/1143 in the exact same class
+        // (Doctrine\DBAL\Exception\ConnectionException) used for genuine
+        // connection failures like access-denied-at-connect-time — so any
+        // class-based discriminator (this command's Fix Round 2) is
+        // fundamentally unable to tell them apart. The re-probe can: since
+        // the connection itself is untouched by a table-level GRANT error,
+        // "SELECT 1" still succeeds, correctly classifying this as a
+        // per-file problem rather than aborting the whole import.
+        //
+        // Matches Documentation/ImportFixturesCommand.md's documented
+        // behavior and the brief's example: 01_categories (imports),
+        // 02_be_users (the deploy DB user lacks INSERT on this table,
+        // skipped), 03_content (still imports).
+        $this->writeFixtureFile('dev', '01_categories.sql', "INSERT INTO be_users (uid, username) VALUES (9001, 'categories_admin');");
+        $this->writeFixtureFile('dev', '02_be_users.sql', "INSERT INTO be_users (uid, username) VALUES (9002, 'privilege_denied_admin');");
+        $this->writeFixtureFile('dev', '03_content.sql', "INSERT INTO be_users (uid, username) VALUES (9003, 'content_admin');");
+
+        $privilegeException = new DbalDriverConnectionException(
+            $this->createDriverException("INSERT command denied to user 'deploy'@'%' for table 'be_users'", 1142),
+            null
+        );
+
+        $connection = $this->createMock(Connection::class);
+        $connection->method('executeQuery')->willReturn($this->createStub(Result::class));
+        $connection->method('executeStatement')->willReturnCallback(
+            static function (string $sql) use ($privilegeException): int {
+                if (str_contains($sql, '9002')) {
+                    throw $privilegeException;
+                }
+
+                return 1;
+            }
+        );
+        $connection->method('isTransactionActive')->willReturn(true);
+
+        $connectionPool = $this->createMock(ConnectionPool::class);
+        $connectionPool->method('getConnectionByName')->willReturn($connection);
+
+        $tester = $this->getCommandTester($connectionPool);
+        $exitCode = $tester->execute(['--directory' => $this->fixtureBasePath]);
+
+        self::assertSame(Command::SUCCESS, $exitCode);
+        $display = $this->normalizedDisplay($tester);
+        self::assertStringContainsString('Imported 2 fixture file(s). Skipped 1.', $display);
+        self::assertStringContainsString("Failed to import \"02_be_users.sql\"", $display);
+        self::assertStringNotContainsString('Database connection', $display);
     }
 
     public function testDryRunReportsFileAndStatementCountsWithoutImporting(): void

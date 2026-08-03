@@ -7,7 +7,6 @@ namespace Cpsit\CpsUtility\Command;
 use Cpsit\CpsUtility\Fixture\FixtureDirectoryResolver;
 use Cpsit\CpsUtility\Fixture\SqlStatementSplitter;
 use Doctrine\DBAL\Exception as DbalException;
-use Doctrine\DBAL\Exception\ConnectionException as DbalConnectionException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -127,6 +126,17 @@ final class ImportFixturesCommand extends Command
 
         $fixtureFiles = GeneralUtility::getFilesInDir($fixtureDirectory, 'sql');
 
+        // GeneralUtility::getFilesInDir() is declared array|string: on a
+        // scandir() failure (e.g. the directory passed is_dir() but isn't
+        // readable — wrong permissions in a deploy environment) it returns
+        // an error string instead of an array. empty() doesn't catch a
+        // non-empty string, so without this guard the sort() call below
+        // would throw an uncaught TypeError instead of a clean error.
+        if (!is_array($fixtureFiles)) {
+            $this->io->error(sprintf('Cannot read fixture directory "%s".', $fixtureDirectory));
+            return Command::FAILURE;
+        }
+
         if (empty($fixtureFiles)) {
             $this->io->info(sprintf('No SQL fixture files found in "%s".', $fixtureDirectory));
             return Command::SUCCESS;
@@ -214,38 +224,48 @@ final class ImportFixturesCommand extends Command
                 $this->io->writeln(sprintf('  Imported: %s', $filename));
                 $importedCount++;
             } catch (\Throwable $e) {
-                // A lost/dropped connection (e.g. wait_timeout, DB restart,
-                // max_allowed_packet kill, access denied, host unreachable)
-                // is fundamentally different from bad fixture SQL: DBAL's
-                // handleDriverException() closes the connection on
-                // ConnectionLost, which resets the internal transaction
-                // nesting level to 0 — calling rollBack() unconditionally at
-                // that point would itself throw NoActiveTransaction,
-                // escaping this catch block entirely and surfacing a raw
-                // stack trace instead of a clean error. Guard the rollback,
-                // and treat connection-level failures as a hard
-                // Command::FAILURE (matching the pre-flight probe above)
-                // rather than silently marking every remaining file as
-                // "skipped" and returning Command::SUCCESS.
-                if ($connection->isTransactionActive()) {
-                    $connection->rollBack();
+                // Classifying "is this a dead connection or bad fixture SQL"
+                // by exception class turned out to be fundamentally
+                // unreliable: DBAL's exception taxonomy differs between
+                // major versions (top-level vs namespaced ConnectionException
+                // in earlier iterations of this fix), and — more importantly
+                // — per-statement privilege errors (MySQL 1142 "command
+                // denied", 1143 column access denied) are raised on a
+                // perfectly healthy connection but are NOT reliably
+                // distinguishable from real connection failures by class
+                // alone across drivers/versions. Instead, re-probe the
+                // connection directly: if a trivial query still succeeds,
+                // the connection is fine and this is a per-file SQL/grant
+                // problem (skip the file, keep going); if the re-probe
+                // itself fails, the connection is genuinely gone (hard
+                // Command::FAILURE). This removes the DBAL-version/taxonomy
+                // dependency entirely.
+                $connectionAlive = true;
+                try {
+                    $connection->executeQuery('SELECT 1');
+                } catch (\Throwable) {
+                    $connectionAlive = false;
                 }
 
-                // Doctrine\DBAL\Exception\ConnectionException is what every
-                // per-platform ExceptionConverter actually throws for real
-                // driver-detected connection failures (e.g. MySQL codes
-                // 1044/1045 access denied, 1046/1049 unknown database, 2002
-                // can't connect, 2005 unknown host — see
-                // Driver/API/MySQL/ExceptionConverter.php). Its subclass
-                // Doctrine\DBAL\Exception\ConnectionLost (MySQL 2006/4031,
-                // "server has gone away") is covered for free via
-                // inheritance. This is deliberately NOT the top-level,
-                // legacy Doctrine\DBAL\ConnectionException class, which is
-                // an unrelated sibling type used only for Connection-API
-                // misuse (NoActiveTransaction, CommitFailedRollbackOnly,
-                // SavepointsNotSupported), not real connection failures.
-                if ($e instanceof DbalConnectionException) {
-                    $this->io->error('Database connection error: ' . $e->getMessage());
+                if (!$connectionAlive) {
+                    $this->io->error('Database connection lost during import: ' . $e->getMessage());
+                    return Command::FAILURE;
+                }
+
+                // The connection itself is fine, so roll back the failed
+                // file's partial statements — but guard the rollback too:
+                // isTransactionActive() only reports false once DBAL has
+                // actually closed the connection (which didn't happen here,
+                // since the re-probe above just proved it's alive), so this
+                // guard is mostly defensive, and a failing rollback is
+                // reported as a clean Command::FAILURE instead of escaping
+                // this catch block as an unhandled exception.
+                try {
+                    if ($connection->isTransactionActive()) {
+                        $connection->rollBack();
+                    }
+                } catch (\Throwable $rollbackError) {
+                    $this->io->error(sprintf('Rollback failed for "%s": %s', $filename, $rollbackError->getMessage()));
                     return Command::FAILURE;
                 }
 
