@@ -122,6 +122,29 @@ Usage in TCA:
  ],
 ```
 
+## CLI Commands
+
+### Import Fixtures
+
+Imports database fixtures from SQL files based on the current TYPO3 application context.
+
+```bash
+php vendor/bin/typo3 cpsit:import-fixtures
+php vendor/bin/typo3 cpsit:import-fixtures --directory .ddev/fixtures
+```
+
+The command resolves a context-specific subdirectory (`dev/`, `staging/`, or `production/`) inside the base fixtures path and executes every `.sql` file found there. A production guard prevents accidental imports on live systems unless `--production` is passed explicitly.
+
+[Documentation](Documentation/ImportFixturesCommand.md)
+
+## Development
+
+### Running Tests
+
+This package has Unit and Functional PHPUnit test suites, including how to run the functional suite against SQLite (fast, no DB server) or against a real MySQL server via Docker Compose.
+
+[Documentation](Documentation/Testing.md)
+
 ## CKEditor Plugins
 
 ### CkContent Plugin

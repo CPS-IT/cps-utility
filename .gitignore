@@ -1,0 +1,28 @@
+# Generated test/build artifacts
+.Build/
+public/
+var/
+Tests/Build/.phpunit.result.cache
+
+# PHPUnit
+.phpunit.cache/
+
+# PHP-CS-Fixer
+.php-cs-fixer.cache
+
+# PHPStan
+.phpstan/
+
+# IDE/Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local environment
+.env.local
