@@ -169,30 +169,37 @@ final class ImportFixturesCommandTest extends FunctionalTestCase
         // with "Permission denied"). That underlying scandir() call is
         // TYPO3 core code (GeneralUtility::getFilesInDir(), not ours) and
         // is not error-suppressed there, so this test is expected to
-        // surface two benign PHP warnings ("Failed to open directory:
-        // Permission denied" / "errno 0: Success") alongside a passing
-        // result — that is core faithfully reporting the exact failure
-        // this test deliberately induces, not a defect.
+        // raise two PHP warnings ("Failed to open directory: Permission
+        // denied" / "errno 0: Success"); they are expected and captured below.
         if (function_exists('posix_getuid') && posix_getuid() === 0) {
             self::markTestSkipped('Running as root bypasses filesystem permission checks, so this scenario cannot be reproduced.');
         }
 
         $unreadableDirectory = $this->fixtureBasePath . '/dev';
 
+        $warnings = [];
+        set_error_handler(static function (int $errno, string $errstr) use (&$warnings): bool {
+            $warnings[] = $errstr;
+
+            return true;
+        }, E_WARNING);
+
         try {
             chmod($unreadableDirectory, 0000);
 
             $tester = $this->getCommandTester();
             $exitCode = $tester->execute(['--directory' => $this->fixtureBasePath]);
-
-            self::assertSame(Command::FAILURE, $exitCode);
-            self::assertStringContainsString('Cannot read fixture directory', $this->normalizedDisplay($tester));
         } finally {
+            restore_error_handler();
             // Restore permissions before tearDown()'s recursive rmdir(),
             // which would otherwise be unable to remove/traverse this
             // directory.
             chmod($unreadableDirectory, 0755);
         }
+
+        self::assertNotEmpty($warnings);
+        self::assertSame(Command::FAILURE, $exitCode);
+        self::assertStringContainsString('Cannot read fixture directory', $this->normalizedDisplay($tester));
     }
 
     public function testFailingFileIsFullyRolledBackAndOtherFilesStillImport(): void
