@@ -14,12 +14,24 @@ final class FixtureDirectoryResolverTest extends UnitTestCase
     private FixtureDirectoryResolver $subject;
     private string $projectPath;
     private ApplicationContext $originalContext;
+    /** @var array<int, mixed> */
+    private array $originalEnvironment = [];
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->subject = new FixtureDirectoryResolver();
         $this->originalContext = Environment::getContext();
+        $this->originalEnvironment = [
+            Environment::isCli(),
+            Environment::isComposerMode(),
+            Environment::getProjectPath(),
+            Environment::getPublicPath(),
+            Environment::getVarPath(),
+            Environment::getConfigPath(),
+            Environment::getCurrentScript(),
+            Environment::isWindows() ? 'WINDOWS' : 'UNIX',
+        ];
         $rawProjectPath = sys_get_temp_dir() . '/cps_utility_resolver_test_' . uniqid('', true);
         mkdir($rawProjectPath, 0777, true);
         // Canonicalize once via realpath() (macOS resolves /tmp and /var
@@ -33,7 +45,7 @@ final class FixtureDirectoryResolverTest extends UnitTestCase
 
     protected function tearDown(): void
     {
-        $this->initializeEnvironment($this->projectPath, $this->originalContext);
+        Environment::initialize($this->originalContext, ...$this->originalEnvironment);
         $this->removeDirectory($this->projectPath);
         parent::tearDown();
     }
