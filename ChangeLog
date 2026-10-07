@@ -1,3 +1,7 @@
+2026-10-07         [RELEASE] Release of cps-utility 3.6.0 (Vladimir Falcón Piva)
+2026-10-07 8a30078 [TASK] Restore original TYPO3 Environment after FixtureDirectoryResolverTest (Vladimir Falcón Piva)
+2026-10-07 c91fd95 [TASK] Capture expected PHP warnings in unreadable-directory functional test (Vladimir Falcón Piva)
+
 2026-08-04         [RELEASE] Release of cps-utility 3.5.0 (Vladimir Falcón Piva)
 2026-08-03 9299e4b [TASK] Document how to run unit and functional tests (Vladimir Falcón Piva)
 2026-08-03 246c1f3 [TASK] Bump test Docker images to PHP 8.3+ and add php platform constraint (Vladimir Falcón Piva)
