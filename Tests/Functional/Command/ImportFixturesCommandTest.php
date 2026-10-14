@@ -241,10 +241,10 @@ final class ImportFixturesCommandTest extends FunctionalTestCase
         // therefore not instantiable directly.
         $dbalException = new DbalConnectionException('Simulated connection failure', 1234);
 
-        $failingConnection = $this->createMock(Connection::class);
+        $failingConnection = $this->createStub(Connection::class);
         $failingConnection->method('executeQuery')->willThrowException($dbalException);
 
-        $connectionPool = $this->createMock(ConnectionPool::class);
+        $connectionPool = $this->createStub(ConnectionPool::class);
         $connectionPool->method('getConnectionByName')->willReturn($failingConnection);
 
         $tester = $this->getCommandTester($connectionPool);
@@ -277,10 +277,10 @@ final class ImportFixturesCommandTest extends FunctionalTestCase
 
         $dbalException = new DbalDriverConnectionException($this->createDriverException("Access denied for user 'db'@'db'", 1045), null);
 
-        $failingConnection = $this->createMock(Connection::class);
+        $failingConnection = $this->createStub(Connection::class);
         $failingConnection->method('executeQuery')->willThrowException($dbalException);
 
-        $connectionPool = $this->createMock(ConnectionPool::class);
+        $connectionPool = $this->createStub(ConnectionPool::class);
         $connectionPool->method('getConnectionByName')->willReturn($failingConnection);
 
         $tester = $this->getCommandTester($connectionPool);
@@ -307,10 +307,10 @@ final class ImportFixturesCommandTest extends FunctionalTestCase
 
         $dbalException = new DbalConnectionLost($this->createDriverException('MySQL server has gone away', 2006), null);
 
-        $failingConnection = $this->createMock(Connection::class);
+        $failingConnection = $this->createStub(Connection::class);
         $failingConnection->method('executeQuery')->willThrowException($dbalException);
 
-        $connectionPool = $this->createMock(ConnectionPool::class);
+        $connectionPool = $this->createStub(ConnectionPool::class);
         $connectionPool->method('getConnectionByName')->willReturn($failingConnection);
 
         $tester = $this->getCommandTester($connectionPool);
@@ -336,7 +336,7 @@ final class ImportFixturesCommandTest extends FunctionalTestCase
         $dbalException = new DbalConnectionLost($this->createDriverException('MySQL server has gone away', 2006), null);
 
         $executeQueryCallCount = 0;
-        $failingConnection = $this->createMock(Connection::class);
+        $failingConnection = $this->createStub(Connection::class);
         $failingConnection->method('executeQuery')->willReturnCallback(
             function () use (&$executeQueryCallCount, $dbalException): Result {
                 $executeQueryCallCount++;
@@ -351,7 +351,7 @@ final class ImportFixturesCommandTest extends FunctionalTestCase
         );
         $failingConnection->method('executeStatement')->willThrowException($dbalException);
 
-        $connectionPool = $this->createMock(ConnectionPool::class);
+        $connectionPool = $this->createStub(ConnectionPool::class);
         $connectionPool->method('getConnectionByName')->willReturn($failingConnection);
 
         $tester = $this->getCommandTester($connectionPool);
@@ -372,13 +372,13 @@ final class ImportFixturesCommandTest extends FunctionalTestCase
         // Command::FAILURE with a distinct "Rollback failed" message.
         $this->writeFixtureFile('dev', '01_admin.sql', "INSERT INTO be_users (uid, username) VALUES (9999, 'fixture_admin');");
 
-        $failingConnection = $this->createMock(Connection::class);
+        $failingConnection = $this->createStub(Connection::class);
         $failingConnection->method('executeQuery')->willReturn($this->createStub(Result::class));
         $failingConnection->method('executeStatement')->willThrowException(new \RuntimeException('Simulated bad statement'));
         $failingConnection->method('isTransactionActive')->willReturn(true);
         $failingConnection->method('rollBack')->willThrowException(new \RuntimeException('Simulated rollback failure'));
 
-        $connectionPool = $this->createMock(ConnectionPool::class);
+        $connectionPool = $this->createStub(ConnectionPool::class);
         $connectionPool->method('getConnectionByName')->willReturn($failingConnection);
 
         $tester = $this->getCommandTester($connectionPool);
@@ -416,7 +416,7 @@ final class ImportFixturesCommandTest extends FunctionalTestCase
             null
         );
 
-        $connection = $this->createMock(Connection::class);
+        $connection = $this->createStub(Connection::class);
         $connection->method('executeQuery')->willReturn($this->createStub(Result::class));
         $connection->method('executeStatement')->willReturnCallback(
             static function (string $sql) use ($privilegeException): int {
@@ -429,7 +429,7 @@ final class ImportFixturesCommandTest extends FunctionalTestCase
         );
         $connection->method('isTransactionActive')->willReturn(true);
 
-        $connectionPool = $this->createMock(ConnectionPool::class);
+        $connectionPool = $this->createStub(ConnectionPool::class);
         $connectionPool->method('getConnectionByName')->willReturn($connection);
 
         $tester = $this->getCommandTester($connectionPool);
