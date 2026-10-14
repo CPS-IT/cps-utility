@@ -12,6 +12,8 @@ declare(strict_types=1);
 
 namespace Cpsit\CpsUtility\Traits;
 
+use Psr\Http\Message\ServerRequestInterface;
+use TYPO3\CMS\Core\Cache\CacheTag;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 
@@ -32,9 +34,15 @@ trait FeCacheTagsTrait
             // We only want to set the tag once in one request, so we have to cache that statically if it has been done
             static $cacheTagsSet = false;
 
-            $typoScriptFrontendController = $this->_getTypoScriptFrontendController();
             if (!$cacheTagsSet) {
-                $typoScriptFrontendController->addCacheTags($tags);
+                $request = $GLOBALS['TYPO3_REQUEST'] ?? null;
+                $cacheCollector = $request instanceof ServerRequestInterface ? $request->getAttribute('frontend.cache.collector') : null;
+                if ($cacheCollector !== null) {
+                    // TYPO3 13.3+: the TSFE method is deprecated, CacheTag does not exist on 12.4
+                    $cacheCollector->addCacheTags(...array_map(static fn(string $tag): CacheTag => new CacheTag($tag), $tags));
+                } else {
+                    $this->_getTypoScriptFrontendController()->addCacheTags($tags);
+                }
                 $cacheTagsSet = true;
             }
         }

@@ -54,9 +54,9 @@ class MetaTagViewHelper extends AbstractTagBasedViewHelper
     #[\Override]
     public function initializeArguments(): void
     {
-        $this->registerTagAttribute('property', 'string', 'Property of meta tag');
-        $this->registerTagAttribute('name', 'string', 'Content of meta tag using the name attribute');
-        $this->registerTagAttribute('content', 'string', 'Content of meta tag');
+        $this->registerArgument('property', 'string', 'Property of meta tag');
+        $this->registerArgument('name', 'string', 'Content of meta tag using the name attribute');
+        $this->registerArgument('content', 'string', 'Content of meta tag');
         $this->registerArgument('useCurrentDomain', 'boolean', 'Use current domain', false, false);
         $this->registerArgument('forceAbsoluteUrl', 'boolean', 'Force absolut domain', false, false);
     }
@@ -69,6 +69,12 @@ class MetaTagViewHelper extends AbstractTagBasedViewHelper
     {
         $useCurrentDomain = $this->arguments['useCurrentDomain'];
         $forceAbsoluteUrl = $this->arguments['forceAbsoluteUrl'];
+
+        foreach (['property', 'name', 'content'] as $attribute) {
+            if (isset($this->arguments[$attribute]) && $this->arguments[$attribute] !== '') {
+                $this->tag->addAttribute($attribute, $this->arguments[$attribute]);
+            }
+        }
 
         // set current domain
         if ($useCurrentDomain) {
