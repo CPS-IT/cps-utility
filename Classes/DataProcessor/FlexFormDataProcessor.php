@@ -28,7 +28,7 @@ use TYPO3\CMS\Frontend\DataProcessing\FlexFormProcessor;
  *      valuePathDelimiter = |
  * }
  */
-class FlexFormDataProcessor extends FlexFormProcessor
+readonly class FlexFormDataProcessor extends FlexFormProcessor
 {
     #[\Override]
     public function process(

@@ -92,6 +92,7 @@ final class DateFormat
      * @param array<string, mixed> $conf TypoScript configuration array
      * @return string Formatted date string
      */
+    #[AsAllowedCallable]
     public function parse(string $content, array $conf, ServerRequestInterface $request): string
     {
         $format = $this->resolveFormat($conf);

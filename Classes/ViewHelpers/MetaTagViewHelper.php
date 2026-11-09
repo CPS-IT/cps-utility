@@ -65,7 +65,7 @@ class MetaTagViewHelper extends AbstractTagBasedViewHelper
      * Renders a meta tag
      */
     #[\Override]
-    public function render(): void
+    public function render(): string
     {
         $useCurrentDomain = $this->arguments['useCurrentDomain'];
         $forceAbsoluteUrl = $this->arguments['forceAbsoluteUrl'];
@@ -110,5 +110,7 @@ class MetaTagViewHelper extends AbstractTagBasedViewHelper
                 );
             }
         }
+
+        return '';
     }
 }
